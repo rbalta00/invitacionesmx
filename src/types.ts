@@ -1,0 +1,69 @@
+export interface InvitacionDatos {
+  paquete: "basico" | "premium" | "deluxe";
+  tema: string;
+  nombre: string;
+  fecha: string;
+  mensajeBienvenida: string;
+  ceremonia: {
+    lugar: string;
+    hora: string;
+    direccion: string;
+    maps: string;
+  };
+  recepcion: {
+    lugar: string;
+    hora: string;
+    direccion: string;
+    maps: string;
+  };
+  itinerario: Array<{
+    hora: string;
+    evento: string;
+    icono?: string;
+  }>;
+  dressCode: string;
+  colorSugerido: string[];
+  padres: string[];
+  padrinos: string[];
+  mesaRegalos: string;
+  datosBancarios: string;
+  fotos: string[];
+  hashtag: string;
+  whatsappConfirmacion: string;
+  cancion: string;
+  linkPersonalizado: string;
+  invitados: Array<{
+    nombre: string;
+    pases: number;
+  }>;
+}
+
+export interface PaqueteConfig {
+  nombre: string;
+  precio: string;
+  maxFotos: number;
+  secciones: string[];
+}
+
+export interface TemaConfig {
+  id: string;
+  nombre: string;
+  fontHeading: string;
+  fontBody: string;
+  fontCursive?: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    dark: string;
+    light: string;
+    bg: string;
+    border: string;
+  };
+  bgGradient: string;
+  textDark: string;
+  textLight: string;
+  iconStyle: string;
+  decorativeEmoji: string;
+  customStyle?: string;
+}

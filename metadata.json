@@ -1,0 +1,6 @@
+{
+  "name": "Generador de Invitaciones XV",
+  "description": "Generador privado y profesional de invitaciones digitales para XV años con 9 temas visuales y 3 paquetes personalizables.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

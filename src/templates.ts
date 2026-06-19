@@ -1,0 +1,880 @@
+import { InvitacionDatos, TemaConfig } from "./types";
+import { paquetes, getFotosPorTema } from "./data";
+
+export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): string {
+  // Aseguramos que existan fotos, si no, tomamos las ficticias del tema
+  const listadoFotos = datos.fotos && datos.fotos.length > 0 
+    ? datos.fotos 
+    : getFotosPorTema(tema.id);
+
+  const configPaquete = paquetes[datos.paquete];
+  const maxFotosPermitidas = configPaquete.maxFotos;
+  const fotosFiltradas = listadoFotos.slice(0, maxFotosPermitidas);
+
+  // Generamos el listado de secciones del paquete para incluirlas en la validación
+  const seccionesActivas = configPaquete.secciones;
+
+  // Generamos los items del itinerario
+  const itinerarioHTML = (datos.itinerario || [])
+    .map((item, index) => {
+      // Iconos representativos basados en palabras clave comunes
+      let iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+      const evLower = item.evento.toLowerCase();
+      if (evLower.includes("misa") || evLower.includes("iglesia") || evLower.includes("ceremonia") || evLower.includes("templo")) {
+        iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`;
+      } else if (evLower.includes("brindis") || evLower.includes("cena") || evLower.includes("banquete") || evLower.includes("comida")) {
+        iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 5a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+      } else if (evLower.includes("recepcion") || evLower.includes("coctel") || evLower.includes("salón") || evLower.includes("salon")) {
+        iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>`;
+      } else if (evLower.includes("baile") || evLower.includes("vals") || evLower.includes("baile") || evLower.includes("show")) {
+        iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>`;
+      }
+
+      return `
+      <div class="relative pl-8 pb-8 last:pb-0">
+        <div class="absolute left-0 top-1 bg-white border-2 border-[${tema.colors.primary}] rounded-full p-1.5 z-10 text-[${tema.colors.accent}]">
+          ${iconSvg}
+        </div>
+        ${index < datos.itinerario.length - 1 ? `<div class="absolute left-4 top-5 bottom-0 w-0.5 bg-[${tema.colors.border}]/50"></div>` : ""}
+        <div class="bg-white p-4 rounded-xl shadow-xs border border-gray-100 transform hover:scale-[1.02] transition">
+          <span class="inline-block px-3 py-1 bg-[${tema.colors.light}] text-[${tema.colors.accent}] font-semibold text-sm rounded-full mb-1">
+            ${item.hora} hrs
+          </span>
+          <h4 class="font-medium text-gray-800 text-[15px]">${item.evento}</h4>
+        </div>
+      </div>`;
+    })
+    .join("");
+
+  // Colores sugeridos
+  const colorBubblesHTML = (datos.colorSugerido || [])
+    .map(color => `
+      <div class="flex flex-col items-center">
+        <div class="w-12 h-12 rounded-full border-2 border-white shadow-md transform hover:scale-110 transition cursor-pointer" style="background-color: ${color};"></div>
+        <span class="text-xs font-mono text-gray-500 mt-1">${color.toUpperCase()}</span>
+      </div>`)
+    .join("");
+
+  // Galería de fotos
+  const galeriaFotosHTML = fotosFiltradas
+    .map((foto, index) => `
+      <div class="group relative overflow-hidden rounded-2xl shadow-sm aspect-3/4 bg-gray-100 cursor-pointer" onclick="abrirLightbox(${index})">
+        <img src="${foto}" alt="Sophia XV Foto ${index + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 loading='lazy'" />
+        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+          <svg class="w-8 h-8 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path></svg>
+        </div>
+      </div>`)
+    .join("");
+
+  // Lista de padres y padrinos
+  const padresHTML = (datos.padres || []).map(p => `<p class="text-gray-800 font-medium text-[15px] py-0.5">${p}</p>`).join("");
+  const padrinosHTML = (datos.padrinos || []).map(p => `<p class="text-gray-800 font-medium text-[15px] py-0.5">${p}</p>`).join("");
+
+  const JSONDatosString = JSON.stringify(datos, null, 2);
+
+  // Definimos de forma segura la visibilidad inicial de las secciones en base al paquete
+  const isSectionActive = (secName: string) => seccionesActivas.includes(secName);
+
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XV Años de ${datos.nombre}</title>
+  
+  <!-- Google Fonts importados para el tema -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Monsieur+La Doulaise&family=Montserrat:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Petit+Formal+Script&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Sacramento&family=Syne:wght@400;700;800&family=WindSong:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    // Configuración dinámica de fuentes y estilos para Tailwind
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['${tema.fontBody === "Inter" ? "Inter" : tema.fontBody}', 'sans-serif'],
+            serif: ['${tema.fontHeading}', 'serif'],
+            cursive: ['${tema.fontCursive || "Great Vibes"}', 'cursive']
+          },
+          colors: {
+            primary: '${tema.colors.primary}',
+            secondary: '${tema.colors.secondary}',
+            accent: '${tema.colors.accent}',
+            dark: '${tema.colors.dark}',
+            light: '${tema.colors.light}',
+            borderTheme: '${tema.colors.border}',
+            textThemeDark: '${tema.textDark}',
+            textThemeLight: '${tema.textLight}'
+          },
+          aspectRatio: {
+            '3/4': '3 / 4',
+            '4/3': '4 / 3'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Estilos personalizados del tema elegido */
+    ${tema.customStyle || ""}
+
+    /* Animaciones sutiles y florituras */
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: floaty 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+    .animate-pulse-soft {
+      animation: pulse-soft 3s ease-in-out infinite;
+    }
+
+    /* Scroll suave */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Ocultar secciones inactivas del paquete */
+    section {
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="theme-container min-h-screen text-textThemeDark selection:bg-primary/20 selection:text-accent">
+
+  <!-- ==============================================
+       1. SECCIÓN: APERTURA (TOCA PARA ENTRAR)
+       ============================================== -->
+  ${isSectionActive("apertura") ? `
+  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center transition-all duration-1000" style="background: ${tema.bgGradient};">
+    <div class="max-w-md w-full bg-white/75 backdrop-blur-md rounded-3xl p-8 border border-borderTheme/40 shadow-2xl flex flex-col items-center animate-float">
+      <span class="text-4xl mb-4 text-accent animate-pulse">${tema.decorativeEmoji}</span>
+      <h2 class="font-serif text-xs uppercase tracking-[0.25em] text-gray-500 mb-2">Estás cordialmente invitado a los</h2>
+      <h1 class="font-cursive text-5xl text-accent my-3">XV Años de</h1>
+      <h3 class="font-serif text-3xl font-bold tracking-tight text-dark mb-6">${datos.nombre}</h3>
+      <p class="text-xs text-gray-600 mb-8 font-light italic">Por favor activa el sonido antes de entrar para disfrutar de una mejor experiencia.</p>
+      
+      <button onclick="comenzarExperiencia()" class="relative px-8 py-4 bg-accent text-white font-serif tracking-widest text-xs uppercase rounded-full shadow-lg hover:shadow-xl hover:bg-accent/95 cursor-pointer transform hover:scale-105 active:scale-95 transition-all">
+        ✨ Tocar Para Abrir ✨
+      </button>
+    </div>
+  </div>
+  ` : ""}
+
+  <!-- ==============================================
+       REPRODUCTOR DE MÚSICA BACKGROUND
+       ============================================== -->
+  ${datos.cancion ? `
+  <div id="music-widget" class="fixed top-4 right-4 z-40 hidden">
+    <button onclick="toggleMusic()" class="p-3 bg-white/90 backdrop-blur-md border border-borderTheme/50 rounded-full shadow-lg text-accent hover:bg-white transition-all transform hover:scale-105" id="btn-audio-control">
+      <span id="speaker-icon">
+        <!-- Play / Mute SVG -->
+        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+      </span>
+    </button>
+    <audio id="musica-invitacion" loop>
+      <source src="${datos.cancion}" type="audio/mpeg">
+    </audio>
+  </div>
+  ` : ""}
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-[480px] mx-auto min-h-screen bg-white/10 shadow-2xl relative overflow-x-hidden flex flex-col pb-12">
+
+    <!-- ==============================================
+         2. SECCIÓN: PORTADA
+         ============================================== -->
+    ${isSectionActive("portada") ? `
+    <section data-section="portada" class="relative min-h-[92vh] flex flex-col justify-between p-6 text-center overflow-hidden border-b border-borderTheme/10" style="background: ${tema.bgGradient};">
+      <!-- Decorativos de fondo según tema -->
+      <div class="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-primary/10 blur-2xl"></div>
+      <div class="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-2xl"></div>
+      
+      <!-- Orla Decorativa Superior -->
+      <div class="mt-8">
+        <p class="text-xs uppercase tracking-[0.3em] font-serif text-gray-500 mb-1">Mis XV Años</p>
+        <div class="w-16 h-[1px] bg-primary/60 mx-auto"></div>
+      </div>
+
+      <!-- Nombre central de la quinceañera -->
+      <div class="my-auto z-10 py-6">
+        <p class="text-sm font-serif text-gray-500 italic mb-2">¡Bienvenidos a mi fiesta!</p>
+        <h1 class="cursive-text text-6xl md:text-7xl mb-4">${datos.nombre}</h1>
+        <div class="flex items-center justify-center gap-2 mb-6">
+          <span class="w-8 h-[1px] bg-borderTheme"></span>
+          <span class="text-accent text-[10px] tracking-widest uppercase">⚜️ 15 Primaveras ⚜️</span>
+          <span class="w-8 h-[1px] bg-borderTheme"></span>
+        </div>
+        
+        <!-- Foto Principal de Portada si el usuario tiene fotos o una ilustración por defecto -->
+        ${fotosFiltradas.length > 0 ? `
+        <div class="relative w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-white shadow-xl mb-4">
+          <img src="${fotosFiltradas[0]}" alt="${datos.nombre}" class="w-full h-full object-cover">
+        </div>
+        ` : `
+        <div class="w-56 h-56 mx-auto rounded-full bg-[${tema.colors.light}] border-2 border-[${tema.colors.border}] flex items-center justify-center mb-6 shadow-inner animate-float">
+          <div class="text-center p-4">
+            <span class="text-6xl text-accent/80 block mb-2">${tema.decorativeEmoji}</span>
+            <span class="font-serif text-[10px] uppercase tracking-widest text-accent text-xs">Mis XV Años</span>
+          </div>
+        </div>
+        `}
+      </div>
+
+      <!-- Fecha y llamada a scroll -->
+      <div class="mb-4 z-10 bg-white/45 backdrop-blur-xs p-4 rounded-2xl border border-white/60">
+        <h2 id="portada-fecha-visible" class="font-serif text-xl tracking-wider text-dark"></h2>
+        <div id="event-year" class="text-xs tracking-widest font-mono text-gray-500 mt-1">2026</div>
+        <div class="mt-4 animate-bounce text-gray-400">
+          <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-6l-7 7-7-7"></path></svg>
+        </div>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         3. SECCIÓN: CUENTA REGRESIVA
+         ============================================== -->
+    ${isSectionActive("cuenta") ? `
+    <section data-section="cuenta" class="p-6 text-center bg-white border-b border-gray-100">
+      <h3 class="font-serif text-xs uppercase tracking-[0.2em] text-gray-400 mb-4">Solo Faltan</h3>
+      <div class="grid grid-cols-4 gap-2 max-w-xs mx-auto">
+        <div class="bg-[${tema.colors.light}] p-3 rounded-2xl border border-borderTheme/25">
+          <span id="countdown-days" class="block text-2xl font-serif font-bold text-accent">00</span>
+          <span class="text-[10px] text-gray-500 uppercase tracking-wider font-light">Días</span>
+        </div>
+        <div class="bg-[${tema.colors.light}] p-3 rounded-2xl border border-borderTheme/25">
+          <span id="countdown-hours" class="block text-2xl font-serif font-bold text-accent">00</span>
+          <span class="text-[10px] text-gray-500 uppercase tracking-wider font-light">Hrs</span>
+        </div>
+        <div class="bg-[${tema.colors.light}] p-3 rounded-2xl border border-borderTheme/25">
+          <span id="countdown-minutes" class="block text-2xl font-serif font-bold text-accent">00</span>
+          <span class="text-[10px] text-gray-500 uppercase tracking-wider font-light">Min</span>
+        </div>
+        <div class="bg-[${tema.colors.light}] p-3 rounded-2xl border border-borderTheme/25">
+          <span id="countdown-seconds" class="block text-2xl font-serif font-bold text-accent">00</span>
+          <span class="text-[10px] text-gray-500 uppercase tracking-wider font-light">Seg</span>
+        </div>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         4. SECCIÓN: MENSAJE DE BIENVENIDA
+         ============================================== -->
+    ${isSectionActive("mensaje") ? `
+    <section data-section="mensaje" class="p-8 text-center bg-[#FDFDFD] relative border-b border-gray-50">
+      <div class="absolute inset-x-0 top-0 flex justify-center transform -translate-y-1/2">
+        <span class="bg-white px-4 py-1.5 border border-borderTheme/40 rounded-full shadow-xs text-accent text-sm font-semibold">${tema.decorativeEmoji}</span>
+      </div>
+      <div class="max-w-xs mx-auto py-4">
+        <span class="font-cursive text-3xl text-primary/80 block mb-1">Mi Agradecimiento</span>
+        <p class="text-sm italic leading-relaxed text-gray-600 font-light">
+          "${datos.mensajeBienvenida}"
+        </p>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         5. SECCIÓN: CEREMONIA
+         ============================================== -->
+    ${isSectionActive("ceremonia") ? `
+    <section data-section="ceremonia" class="p-6">
+      <div class="gold-card rounded-3xl p-6 text-center">
+        <div class="flex justify-center mb-3">
+          <span class="${tema.iconStyle}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+          </span>
+        </div>
+        <h3 class="font-serif text-xl text-dark font-semibold">Ceremonia Religiosa</h3>
+        <p class="text-xs text-accent uppercase tracking-widest font-semibold mt-1 mb-4">Acción de Gracias</p>
+        
+        <div class="space-y-2 border-t border-b border-borderTheme/20 py-4 my-4">
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block">Lugar</span>
+            <span class="text-sm font-semibold text-gray-800">${datos.ceremonia.lugar}</span>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block">Hora</span>
+            <span class="text-sm font-semibold text-gray-800">${datos.ceremonia.hora} hrs</span>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block">Dirección</span>
+            <span class="text-xs text-gray-600 font-light block line-clamp-2 px-4">${datos.ceremonia.direccion}</span>
+          </div>
+        </div>
+
+        ${datos.ceremonia.maps ? `
+        <a href="${datos.ceremonia.maps}" target="_blank" class="inline-flex items-center gap-1.5 px-6 py-2.5 bg-accent text-white text-xs font-semibold uppercase tracking-wider rounded-full shadow-md hover:bg-accent/95 transition transform active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          Ver mapa de ubicación
+        </a>
+        ` : ""}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         6. SECCIÓN: RECEPCIÓN
+         ============================================== -->
+    ${isSectionActive("recepcion") ? `
+    <section data-section="recepcion" class="p-6 pt-2">
+      <div class="gold-card rounded-3xl p-6 text-center">
+        <div class="flex justify-center mb-3">
+          <span class="${tema.iconStyle}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 5a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          </span>
+        </div>
+        <h3 class="font-serif text-xl text-dark font-semibold">Gran Banquete</h3>
+        <p class="text-xs text-accent uppercase tracking-widest font-semibold mt-1 mb-4">Recepción & Fiesta</p>
+        
+        <div class="space-y-2 border-t border-b border-borderTheme/20 py-4 my-4">
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block">Salón</span>
+            <span class="text-sm font-semibold text-gray-800">${datos.recepcion.lugar}</span>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block">Hora</span>
+            <span class="text-sm font-semibold text-gray-800">${datos.recepcion.hora} hrs</span>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block">Dirección</span>
+            <span class="text-xs text-gray-600 font-light block line-clamp-2 px-4">${datos.recepcion.direccion}</span>
+          </div>
+        </div>
+
+        ${datos.recepcion.maps ? `
+        <a href="${datos.recepcion.maps}" target="_blank" class="inline-flex items-center gap-1.5 px-6 py-2.5 bg-accent text-white text-xs font-semibold uppercase tracking-wider rounded-full shadow-md hover:bg-accent/95 transition transform active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          Ver mapa de ubicación
+        </a>
+        ` : ""}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         7. SECCIÓN: ITINERARIO
+         ============================================== -->
+    ${isSectionActive("itinerario") ? `
+    <section data-section="itinerario" class="p-6">
+      <div class="text-center mb-6">
+        <span class="cursive-text text-3xl text-primary/80">Cronograma del Día</span>
+        <h3 class="font-serif text-xl text-dark">Nuestro Itinerario</h3>
+        <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">Para no perderte de nada</p>
+      </div>
+
+      <div class="max-w-sm mx-auto pl-2 pr-2">
+        ${itinerarioHTML}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         8. SECCIÓN: CÓDIGO DE VESTIMENTA
+         ============================================== -->
+    ${isSectionActive("vestimenta") ? `
+    <section data-section="vestimenta" class="p-6 text-center">
+      <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs">
+        <div class="flex justify-center mb-3 text-accent animate-pulse-soft">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2-3-2.75-3-2.75V5a3 3 0 10-6 0v.5M3 8.25c0-2 3-2.75 3-2.75V5a3 3 0 106 0v.5m-3-1l.7 10h1.6m4-10l-.7 10h-1.6"></path></svg>
+        </div>
+        <h3 class="font-serif text-lg text-dark font-bold mb-1">Código de Vestimenta</h3>
+        <p class="text-xs text-gray-500 font-light uppercase tracking-wider mb-3">Dress Code</p>
+        <p class="text-sm font-medium text-gray-700 italic px-4">
+          "${datos.dressCode}"
+        </p>
+
+        ${datos.colorSugerido && datos.colorSugerido.length > 0 ? `
+        <div class="mt-6 border-t border-gray-100 pt-5">
+          <h4 class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block mb-3">Colores sugeridos e inspiración</h4>
+          <div class="flex justify-center gap-4">
+            ${colorBubblesHTML}
+          </div>
+        </div>
+        ` : ""}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         9. SECCIÓN: FAMILIA (PADRES Y PADRINOS)
+         ============================================== -->
+    ${isSectionActive("familia") ? `
+    <section data-section="familia" class="p-6 pb-2 text-center">
+      <div class="gold-card rounded-3xl p-6">
+        <span class="text-2xl text-accent mb-2 block">⚜️</span>
+        <h3 class="font-serif text-lg text-dark mb-1">Con la Bendición de Mis Padres</h3>
+        <div class="py-2 mb-4">
+          ${padresHTML}
+        </div>
+
+        ${padrinosHTML.length > 0 ? `
+        <div class="border-t border-borderTheme/20 pt-4 mt-2">
+          <h4 class="font-serif text-md text-accent italic mb-2">Y de mis amados Padrinos</h4>
+          ${padrinosHTML}
+        </div>
+        ` : ""}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         10. SECCIÓN: REGALOS / LLUVIA DE SOBRES
+         ============================================== -->
+    ${isSectionActive("regalos") ? `
+    <section data-section="regalos" class="p-6 text-center">
+      <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs">
+        <div class="flex justify-center mb-3">
+          <span class="${tema.iconStyle}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+          </span>
+        </div>
+        <h3 class="font-serif text-lg text-dark font-bold mb-1">Caja de Regalos</h3>
+        <p class="text-xs text-gray-400 font-light uppercase tracking-wider mb-4">Muestras de Afecto</p>
+        
+        <p class="text-xs text-gray-500 font-light mb-4 line-clamp-3">El obsequio más grande es tu presencia, pero si deseas hacerme un detalle, te dejo mis opciones disponibles:</p>
+        
+        ${datos.mesaRegalos ? `
+        <div class="bg-[${tema.colors.light}] rounded-2xl p-4 border border-borderTheme/15 mb-4 text-left">
+          <span class="text-[10px] uppercase font-bold tracking-widest text-[#B89D4B] block mb-1">Mesa de Regalos</span>
+          <p class="text-sm font-semibold text-gray-700">${datos.mesaRegalos}</p>
+        </div>
+        ` : ""}
+
+        ${datos.datosBancarios ? `
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-150 text-left relative">
+          <span class="text-[10px] uppercase font-bold tracking-widest text-gray-400 block mb-1">Transferencia Bancaria</span>
+          <p id="banco-info" class="text-xs font-mono text-gray-700 whitespace-pre-line leading-relaxed">${datos.datosBancarios}</p>
+          
+          <button onclick="copiarDatosTransferencia()" class="mt-3 w-full py-1.5 bg-white text-[11px] text-accent font-semibold flex items-center justify-center gap-1.5 border border-borderTheme/50 rounded-lg hover:bg-[${tema.colors.light}] transition cursor-pointer active:bg-gray-100">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+            Copiar Datos Bancarios
+          </button>
+        </div>
+        ` : ""}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         11. SECCIÓN: GALERÍA DE FOTOS
+         ============================================== -->
+    ${isSectionActive("galeria") && fotosFiltradas.length > 0 ? `
+    <section data-section="galeria" class="p-6">
+      <div class="text-center mb-6">
+        <span class="cursive-text text-3xl text-primary/80">Recuerdos Inolvidables</span>
+        <h3 class="font-serif text-xl text-dark">Mi Álbum de Fotos</h3>
+        <p class="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">Capturando el momento</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+        ${galeriaFotosHTML}
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         12. SECCIÓN: HASHTAG
+         ============================================== -->
+    ${isSectionActive("hashtag") && datos.hashtag ? `
+    <section data-section="hashtag" class="p-6 text-center">
+      <div class="bg-[${tema.colors.light}] rounded-3xl p-6 border border-borderTheme/30">
+        <span class="text-2xl mb-1 block">📸</span>
+        <h4 class="font-serif text-md text-dark mb-1">¡Comparte tus capturas!</h4>
+        <p class="text-xs text-gray-500 mb-4">Etiqueta mis historias usando mi hashtag oficial:</p>
+        <span class="inline-block px-5 py-2 bg-white text-accent font-mono font-bold tracking-wide rounded-full border border-borderTheme/60 shadow-xs text-sm transform hover:scale-105 transition">
+          ${datos.hashtag}
+        </span>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         13. SECCIÓN: AGREGAR AL CALENDARIO
+         ============================================== -->
+    ${isSectionActive("calendario") ? `
+    <section data-section="calendario" class="p-6 text-center">
+      <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs">
+        <div class="flex justify-center mb-3">
+          <span class="${tema.iconStyle}">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          </span>
+        </div>
+        <h3 class="font-serif text-lg text-dark font-bold mb-1">¿Deseas reservarlo?</h3>
+        <p class="text-xs text-gray-400 font-light uppercase tracking-wider mb-4">Agenda el evento</p>
+        <button onclick="agregarAlCalendario()" class="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-xs font-semibold uppercase tracking-wider rounded-full shadow-md hover:bg-accent/95 cursor-pointer transform active:scale-95 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Agregar a Google Calendar
+        </button>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         14. SECCIÓN: PASES PERSONALIZADOS
+         ============================================== -->
+    ${isSectionActive("pases") ? `
+    <section data-section="pases" class="p-6">
+      <div class="gold-card rounded-3xl p-6 text-center relative overflow-hidden">
+        <span class="text-3xl text-accent/80 block mb-3 animate-float">${tema.decorativeEmoji}</span>
+        <h3 class="font-serif text-xl text-dark font-bold">Pases de Entrada</h3>
+        <p class="text-xs text-gray-500 font-light uppercase tracking-wider mb-4">Acceso Exclusivo</p>
+        
+        <p class="text-xs text-gray-500 font-light mb-4 text-center line-clamp-3">Para buscar los pases que te corresponden, por favor introduce los apellidos de tu familia o tu nombre:</p>
+        
+        <!-- Buscador de pases -->
+        <div class="relative max-w-xs mx-auto mb-4">
+          <input type="text" id="input-buscar-pase" placeholder="Ej. Familia Gómez Mendoza..." class="w-full pl-4 pr-10 py-2.5 text-xs text-gray-700 bg-gray-50 rounded-full border border-gray-200 outline-none focus:border-accent focus:bg-white transition" />
+          <button onclick="buscarBoletos()" class="absolute right-1.5 top-1.5 bg-accent text-white rounded-full p-1.5 hover:bg-accent/95 transition cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </button>
+        </div>
+
+        <!-- Tarjeta de pase dinámico -->
+        <div id="resultado-pase-bloque" class="hidden max-w-xs mx-auto p-4 rounded-2xl bg-[${tema.colors.light}] border border-borderTheme/50 mt-4 text-center animate-pulse-soft">
+          <span class="text-[9px] uppercase tracking-widest text-[#B89D4B] font-bold block">Pase de Invitación</span>
+          <div class="h-[1px] bg-borderTheme/30 my-2"></div>
+          <p id="pase-nombre-invitado" class="text-md font-serif text-dark font-semibold"></p>
+          <div class="my-3 bg-white py-2 rounded-xl border border-gray-150 inline-block px-5">
+            <span class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold block">Pases Reservados</span>
+            <span id="pase-cantidad" class="text-3xl font-bold text-accent font-serif">2</span>
+          </div>
+          <p class="text-[10px] text-gray-400 italic font-mono mt-1">Presenta esta invitación digital para tu ingreso</p>
+        </div>
+
+        <div id="sin-coincidencia-pases" class="hidden text-xs text-gray-500 italic mt-3">
+          No encontramos ese nombre en la lista, intenta con otros apellidos o escríbelo de manera similar.
+        </div>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         15. SECCIÓN: CONFIRMACIÓN POR WHATSAPP
+         ============================================== -->
+    ${isSectionActive("confirmacion") ? `
+    <section data-section="confirmacion" class="p-6 text-center">
+      <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs">
+        <span class="text-2xl mb-1 block">💌</span>
+        <h3 class="font-serif text-lg text-dark font-bold mb-1">Confirmación de Asistencia</h3>
+        <p class="text-xs text-gray-400 font-light uppercase tracking-wider mb-4">Tu lugar es especial</p>
+        
+        <p class="text-xs text-gray-500 font-light mb-6 px-4">Por favor envíanos tu confirmación de asistencia lo antes posible. Agradeceríamos tu aviso directo vía WhatsApp:</p>
+        
+        <div class="space-y-3 max-w-xs mx-auto">
+          <input type="text" id="rsvp-nombre" placeholder="Nombre completo o Familia..." class="w-full px-4 py-2.5 text-xs text-gray-700 bg-gray-50 rounded-full border border-gray-200 focus:border-accent focus:bg-white outline-none transition" />
+          
+          <select id="rsvp-asistencia" class="w-full px-4 py-2.5 text-xs text-gray-700 bg-gray-50 rounded-full border border-gray-200 focus:border-accent focus:bg-white outline-none transition">
+            <option value="si">Confirmar: Sí, asistiré con gusto</option>
+            <option value="no">Disculparme: Lo siento, no podré asistir</option>
+          </select>
+          
+          <input type="number" id="rsvp-pases" placeholder="Número de personas..." min="1" max="10" class="w-full px-4 py-2.5 text-xs text-gray-700 bg-gray-50 rounded-full border border-gray-200 focus:border-accent focus:bg-white inline-block outline-none transition" />
+          
+          <button onclick="enviarRSVPWhatsApp()" class="mt-2 w-full py-3 bg-[#25D366] text-white font-serif uppercase tracking-widest text-xs rounded-full shadow-md hover:bg-[#20ba56] cursor-pointer transform active:scale-95 transition-all flex items-center justify-center gap-2">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.413 9.863-9.864.001-2.641-1.026-5.124-2.89-6.991C16.576 1.884 14.09 1.856 11.997 1.856c-5.444 0-9.87 4.414-9.873 9.866-.001 1.768.487 3.491 1.417 5.011L2.553 21.05l4.094-1.074z"/></svg>
+            Confirmar por WhatsApp
+          </button>
+        </div>
+      </div>
+    </section>
+    ` : ""}
+
+    <!-- ==============================================
+         16. SECCIÓN: CIERRE Y DESPEDIDA
+         ============================================== -->
+    ${isSectionActive("cierre") ? `
+    <footer data-section="cierre" class="relative mt-12 py-12 px-6 text-center" style="background: ${tema.bgGradient};">
+      <div class="absolute inset-x-0 top-0 h-[1px] bg-borderTheme/25"></div>
+      
+      <span class="text-4xl text-accent mb-4 animate-float block">${tema.decorativeEmoji}</span>
+      <h3 class="cursive-text text-5xl mb-4 text-accent">${datos.nombre}</h3>
+      <p class="font-serif text-xl tracking-tight text-dark">¡Te espero para celebrar de mi soñado día!</p>
+      
+      <div class="w-12 h-1px bg-borderTheme/50 mx-auto mt-6 mb-2"></div>
+      <p class="text-[9px] font-mono tracking-widest text-gray-400">INIVTACIÓN DIGITAL PRIVADA • EXCLUSIVA</p>
+    </footer>
+    ` : ""}
+
+  </main>
+
+  <!-- ==============================================
+       LIGHTBOX CAROUSEL DE FOTOS
+       ============================================== -->
+  <div id="lightbox-carousel" class="fixed inset-0 bg-black/95 z-50 hidden flex-col items-center justify-between p-4 transition-all duration-300">
+    <button onclick="cerrarLightbox()" class="self-end p-2 text-white/80 hover:text-white text-3xl font-light cursor-pointer select-none">&times;</button>
+    
+    <div class="relative w-full max-w-md my-auto aspect-3/4 flex items-center justify-center">
+      <button onclick="navegarLightbox(-1)" class="absolute left-2 p-3 text-white/70 hover:text-white text-3xl select-none cursor-pointer">&lsaquo;</button>
+      <img id="lightbox-imagen-activa" src="" class="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl" />
+      <button onclick="navegarLightbox(1)" class="absolute right-2 p-3 text-white/70 hover:text-white text-3xl select-none cursor-pointer">&rsaquo;</button>
+    </div>
+
+    <div class="pb-6 text-white/60 font-mono text-xs" id="lightbox-indice"></div>
+  </div>
+
+  <!-- ==============================================
+       DATA SOURCE / CONFIGURACIÓN DE INVITACIÓN
+       ============================================== -->
+  <script>
+    // Inyectamos el objeto de datos original en el cliente
+    const datosInvitacion = ${JSONDatosString};
+    const fotosCarousel = ${JSON.stringify(fotosFiltradas)};
+    let indiceLightbox = 0;
+
+    // Ejecutar al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Iniciar Cuenta Regresiva
+      iniciarCuentaRegresiva("${datos.fecha}");
+
+      // 2. Colocar Fecha en Portada legible de forma humana
+      formatearFechaPortada("${datos.fecha}");
+    });
+
+    // 1. Manejo del reproductor de sonido
+    const audioPlayer = document.getElementById('musica-invitacion');
+    const speakerBtn = document.getElementById('btn-audio-control');
+    const speakerWidget = document.getElementById('music-widget');
+    let isPlaying = false;
+
+    function comenzarExperiencia() {
+      // Esconder pantalla de bienvenida
+      const overlay = document.getElementById('pantalla-apertura');
+      if (overlay) {
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.remove(), 1000);
+      }
+
+      // Mostrar widget de control musical
+      if (speakerWidget) speakerWidget.classList.remove('hidden');
+
+      // Reproducir música
+      if (audioPlayer) {
+        audioPlayer.play().then(() => {
+          isPlaying = true;
+          actualizarIconoAltavoz();
+        }).catch(err => {
+          console.log("Auto-play blocked or error: ", err);
+        });
+      }
+    }
+
+    function toggleMusic() {
+      if (!audioPlayer) return;
+      if (isPlaying) {
+        audioPlayer.pause();
+        isPlaying = false;
+      } else {
+        audioPlayer.play().then(() => {
+          isPlaying = true;
+        });
+      }
+      actualizarIconoAltavoz();
+    }
+
+    function actualizarIconoAltavoz() {
+      const btn = document.getElementById('speaker-icon');
+      if (!btn) return;
+      if (isPlaying) {
+        btn.innerHTML = \`<svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>\`;
+      } else {
+        btn.innerHTML = \`<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>\`;
+      }
+    }
+
+    // 2. Lógica Cuenta Regresiva
+    function iniciarCuentaRegresiva(fechaTargetStr) {
+      if (!fechaTargetStr) return;
+      const targetDate = new Date(fechaTargetStr).getTime();
+
+      const timer = setInterval(() => {
+        const now = new Date().getTime();
+        const difference = targetDate - now;
+
+        if (difference < 0) {
+          clearInterval(timer);
+          document.getElementById('countdown-days').innerText = "00";
+          document.getElementById('countdown-hours').innerText = "00";
+          document.getElementById('countdown-minutes').innerText = "00";
+          document.getElementById('countdown-seconds').innerText = "00";
+          return;
+        }
+
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        document.getElementById('countdown-days').innerText = String(days).padStart(2, '0');
+        document.getElementById('countdown-hours').innerText = String(hours).padStart(2, '0');
+        document.getElementById('countdown-minutes').innerText = String(minutes).padStart(2, '0');
+        document.getElementById('countdown-seconds').innerText = String(seconds).padStart(2, '0');
+      }, 1000);
+    }
+
+    // 3. Formateo de Fecha Portada
+    function formatearFechaPortada(fechaStr) {
+      if (!fechaStr) return;
+      try {
+        const d = new Date(fechaStr);
+        const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        
+        const diaNombre = diasSemana[d.getDay()];
+        const diaNum = d.getDate();
+        const mesNombre = meses[d.getMonth()];
+        const anio = d.getFullYear();
+
+        const elem = document.getElementById('portada-fecha-visible');
+        if (elem) {
+          elem.innerText = \`\${diaNombre} \${diaNum} de \${mesNombre}\`;
+        }
+        
+        const yearElem = document.getElementById('event-year');
+        if (yearElem) {
+          yearElem.innerText = anio;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // 4. Lógica de Pases Personalizados
+    function buscarBoletos() {
+      const q = document.getElementById('input-buscar-pase').value.trim().toLowerCase();
+      const resultadoBloque = document.getElementById('resultado-pase-bloque');
+      const sinCoincidencia = document.getElementById('sin-coincidencia-pases');
+
+      if (!resultadoBloque || !sinCoincidencia) return;
+
+      if (!q) {
+        resultadoBloque.classList.add('hidden');
+        sinCoincidencia.classList.add('hidden');
+        return;
+      }
+
+      // Buscamos coincidencia parcial
+      const match = datosInvitacion.invitados.find(inv => {
+        return inv.nombre.toLowerCase().includes(q);
+      });
+
+      if (match) {
+        document.getElementById('pase-nombre-invitado').innerText = match.nombre;
+        document.getElementById('pase-quantity') 
+          ? document.getElementById('pase-quantity').innerText = match.pases 
+          : document.getElementById('pase-cantidad').innerText = match.pases;
+          
+        resultadoBloque.classList.remove('hidden');
+        sinCoincidencia.classList.add('hidden');
+      } else {
+        resultadoBloque.classList.add('hidden');
+        sinCoincidencia.classList.remove('hidden');
+      }
+    }
+
+    // Permitir buscar pases presionando enter
+    const txtBuscar = document.getElementById('input-buscar-pase');
+    if (txtBuscar) {
+      txtBuscar.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') buscarBoletos();
+      });
+    }
+
+    // 5. RSVP por WhatsApp
+    function enviarRSVPWhatsApp() {
+      const nombre = document.getElementById('rsvp-nombre').value.trim();
+      const asistencia = document.getElementById('rsvp-asistencia').value;
+      const pases = document.getElementById('rsvp-pases').value || "1";
+
+      if (!nombre) {
+        alert("Por favor ingresa tu nombre para proceder con la confirmación de asistencia.");
+        return;
+      }
+
+      const txtAsistira = asistencia === 'si' 
+        ? "¡CONFIRMO con agrado mi asistencia!" 
+        : "Lamentablemente NO podré asistir en esta ocasión.";
+
+      const cantPasesMsg = asistencia === 'si'
+        ? \`\\n🎟️ Pases que confirmo: \${pases}\`
+        : "";
+
+      const msg = \`¡Hola ${datos.nombre}! 👋\\nA través de tu invitación digital te confirmo lo siguiente:\\n\\n👤 Invitado: \${nombre}\\n💌 Estado: \${txtAsistira}\${cantPasesMsg}\\n\\n¡Muchas gracias por la invitación! ✨\`;
+      
+      const encodeMsg = encodeURIComponent(msg);
+      window.open(\`https://api.whatsapp.com/send?phone=${datos.whatsappConfirmacion}&text=\${encodeMsg}\`, '_blank');
+    }
+
+    // 6. Copiar Datos de Transferencia al Portapapeles
+    function copiarDatosTransferencia() {
+      const infoText = document.getElementById('banco-info').innerText;
+      navigator.clipboard.writeText(infoText).then(() => {
+        alert("¡Datos bancarios copiados correctamente en tu portapapeles! ⚜️");
+      }).catch(err => {
+        console.error("No se pudo copiar: ", err);
+      });
+    }
+
+    // 7. Lógica Lightbox de Fotos Carousel
+    function abrirLightbox(index) {
+      if (!fotosCarousel || fotosCarousel.length === 0) return;
+      indiceLightbox = index;
+      document.getElementById('lightbox-imagen-activa').src = fotosCarousel[indiceLightbox];
+      document.getElementById('lightbox-indice').innerText = \`Foto \${indiceLightbox + 1} de \${fotosCarousel.length}\`;
+      document.getElementById('lightbox-carousel').classList.remove('hidden');
+      document.getElementById('lightbox-carousel').classList.add('flex');
+    }
+
+    function cerrarLightbox() {
+      document.getElementById('lightbox-carousel').classList.add('hidden');
+      document.getElementById('lightbox-carousel').classList.remove('flex');
+    }
+
+    function navegarLightbox(direction) {
+      if (!fotosCarousel || fotosCarousel.length === 0) return;
+      indiceLightbox += direction;
+      if (indiceLightbox < 0) {
+        indiceLightbox = fotosCarousel.length - 1;
+      } else if (indiceLightbox >= fotosCarousel.length) {
+        indiceLightbox = 0;
+      }
+      document.getElementById('lightbox-imagen-activa').src = fotosCarousel[indiceLightbox];
+      document.getElementById('lightbox-indice').innerText = \`Foto \${indiceLightbox + 1} de \${fotosCarousel.length}\`;
+    }
+
+    // 8. Crear Calendario de Eventos Google
+    function agregarAlCalendario() {
+      const name = "XV Años de ${datos.nombre}";
+      const location = "${datos.ceremonia.lugar} & ${datos.recepcion.lugar}";
+      
+      // Fecha en formato Google Cal UTC
+      const eventDate = new Date("${datos.fecha}");
+      const startDateUTC = eventDate.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+      
+      // Sumamos 5 horas para estimar duración
+      const endDate = new Date(eventDate.getTime() + (5 * 60 * 60 * 1000));
+      const endDateUTC = endDate.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+      const details = "¡Te espero con gran alegría para celebrar juntos mis 15 años! Trae tu invitación digital.";
+      
+      const link = \`https://calendar.google.com/calendar/render?action=TEMPLATE&text=\${encodeURIComponent(name)}&dates=\${startDateUTC}/\${endDateUTC}&details=\${encodeURIComponent(details)}&location=\${encodeURIComponent(location)}&sf=true&output=xml\`;
+      
+      window.open(link, '_blank');
+    }
+  </script>
+</body>
+</html>`;
+}
