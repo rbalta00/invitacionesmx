@@ -43,7 +43,7 @@ export default function App() {
   const [datosCopiados, setDatosCopiados] = useState(false);
 
   // Estados para compartir por WhatsApp
-  const [whatsappDestino, setWhatsappDestino] = useState("22177445410");
+  const [whatsappDestino, setWhatsappDestino] = useState("522217445410");
   const [whatsappTemplateId, setWhatsappTemplateId] = useState("completo");
 
   // Estados locales para nuevos elementos interactivos de listas
