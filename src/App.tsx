@@ -26,14 +26,82 @@ import { InvitacionDatos, TemaConfig } from "./types";
 import { temas, paquetes, datosDefault, getFotosPorTema } from "./data";
 import { generarHTMLFinal } from "./templates";
 
+// Helper functions for UTF-8 safe Base64 encoding/decoding of state in URLs
+const encodeState = (obj: any): string => {
+  try {
+    const copy = JSON.parse(JSON.stringify(obj));
+    // Remove very large base64 images from URL state to prevent exceeding browser limits
+    if (copy.fotos && copy.fotos.length > 0) {
+      copy.fotos = copy.fotos.map((f: string) => {
+        if (f && f.startsWith("data:image") && f.length > 2500) {
+          return "default";
+        }
+        return f;
+      });
+    }
+    const str = JSON.stringify(copy);
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => {
+      return String.fromCharCode(parseInt(p1, 16));
+    }));
+  } catch (e) {
+    console.error("Error al codificar estado para compartir:", e);
+    return "";
+  }
+};
+
+const decodeState = (str: string): any => {
+  try {
+    const jsonStr = decodeURIComponent(atob(str).split('').map((c) => {
+      return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(""));
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    console.error("Error al decodificar estado desde compartir:", e);
+    return null;
+  }
+};
+
 export default function App() {
+  // Cargar estado inicial desde la URL si existe para la vista compartida o el editor precargado
+  const getInitialState = (): { initialDatos: InvitacionDatos; initialTemaId: string; isView: boolean } => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isView = params.get("v") === "1" || params.get("view") === "true";
+      const d = params.get("d");
+      if (d) {
+        const decoded = decodeState(d);
+        if (decoded && typeof decoded === "object") {
+          return {
+            initialDatos: {
+              ...datosDefault.premium,
+              ...decoded
+            },
+            initialTemaId: decoded.tema || "mariposas",
+            isView
+          };
+        }
+      }
+      return {
+        initialDatos: { ...datosDefault.premium },
+        initialTemaId: "mariposas",
+        isView
+      };
+    } catch (e) {
+      return {
+        initialDatos: { ...datosDefault.premium },
+        initialTemaId: "mariposas",
+        isView: false
+      };
+    }
+  };
+
+  const { initialDatos, initialTemaId, isView: isViewMode } = getInitialState();
+
   // Estado principal de los datos de la invitación
-  const [datos, setDatos] = useState<InvitacionDatos>({
-    ...datosDefault.premium // Empezamos por defecto con Premium para mostrar más secciones
-  });
+  const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
 
   // Estado del tema seleccionado
-  const [selectedTemaId, setSelectedTemaId] = useState<string>("mariposas");
+  const [selectedTemaId, setSelectedTemaId] = useState<string>(initialTemaId);
 
   // Estado para la pestaña de configuración activa en el panel lateral
   const [panelPestana, setPanelPestana] = useState<"ajustes" | "quince" | "lugares" | "itincode" | "familia" | "regalos" | "fotos" | "invitados">("ajustes");
@@ -173,7 +241,8 @@ export default function App() {
 
   // Compartir datos de la invitación final por WhatsApp
   const handleEnviarWhatsApp = () => {
-    const urlFinal = "https://ais-pre-gt7763na7jvvj2sv6undpi-53430969538.us-west2.run.app";
+    const appUrl = window.location.origin + window.location.pathname;
+    const urlFinal = `${appUrl}?v=1&d=${encodeState(datos)}`;
     const nombreQuince = datos.nombre || "Sophia Valeria";
     
     let fechaBonita = datos.fecha;
@@ -195,9 +264,9 @@ export default function App() {
 
     let msg = "";
     if (whatsappTemplateId === "link-only") {
-      msg = `¡Hola! Te comparto el enlace final del Generador de Invitaciones de XV Años para personalizar la tuya: ${urlFinal}`;
+      msg = `🌸 ¡Hola! Te comparto el enlace final de la invitación digital interactiva de XV Años de *${nombreQuince}*: ${urlFinal}`;
     } else {
-      msg = `¡Hola! Ya está lista la propuesta de invitación digital de XV Años para *${nombreQuince}*. 🌸✨\n\n📅 *Fecha:* ${fechaBonita}\n💒 *Misa:* ${datos.ceremonia.lugar || "Sin especificar"} (${datos.ceremonia.hora || "Sin especificar"} hrs)\n🎉 *Recepción:* ${datos.recepcion.lugar || "Sin especificar"} (${datos.recepcion.hora || "Sin especificar"} hrs)\n\n👉 Puedes ver la vista previa del diseño responsivo en tiempo real interactivo ingresando a este enlace:\n${urlFinal}`;
+      msg = `¡Hola! Ya está lista la propuesta de invitación digital de XV Años para *${nombreQuince}*. 🌸✨\n\n📅 *Fecha:* ${fechaBonita}\n💒 *Misa:* ${datos.ceremonia.lugar || "Sin especificar"} (${datos.ceremonia.hora || "Sin especificar"} hrs)\n🎉 *Recepción:* ${datos.recepcion.lugar || "Sin especificar"} (${datos.recepcion.hora || "Sin especificar"} hrs)\n\n👉 Puedes ver la invitación digital interactiva ingresando a este enlace:\n${urlFinal}`;
     }
 
     const numberClean = whatsappDestino.replace(/[^0-9]/g, "");
@@ -364,6 +433,32 @@ export default function App() {
       colorSugerido: prev.colorSugerido.filter(c => c !== color)
     }));
   };
+
+  if (isViewMode) {
+    const htmlContent = generarHTMLFinal(datos, temaActual);
+    return (
+      <div className="w-screen h-screen fixed inset-0 overflow-hidden bg-white z-50">
+        <iframe
+          title="Invitación Interactiva"
+          srcDoc={htmlContent}
+          className="w-full h-full border-0 m-0 p-0 block"
+          style={{ width: "100vw", height: "100vh" }}
+        />
+        {/* Botón flotante elegante para volver al editor */}
+        <button
+          onClick={() => {
+            // Quitar los parámetros para abrir el generador / editor privado
+            window.location.href = window.location.origin + window.location.pathname;
+          }}
+          className="fixed bottom-4 right-4 z-50 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-xs text-white text-[11px] font-semibold py-1.5 px-3 rounded-full shadow-lg border border-slate-700/50 flex items-center gap-1.5 transition-all duration-200 cursor-pointer opacity-30 hover:opacity-100"
+          title="Abrir editor de esta invitación"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Ver Editor</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
