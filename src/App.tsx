@@ -26,23 +26,22 @@ import { InvitacionDatos, TemaConfig } from "./types";
 import { temas, paquetes, datosDefault, getFotosPorTema } from "./data";
 import { generarHTMLFinal } from "./templates";
 
-// Helper functions for UTF-8 safe Base64 encoding/decoding of state in URLs
+// Helper functions for UTF-8 safe and compact Base64 encoding/decoding of state in URLs
 const encodeState = (obj: any): string => {
   try {
     const copy = JSON.parse(JSON.stringify(obj));
-    // Remove very large base64 images from URL state to prevent exceeding browser limits
+    // Remove very large base64 images from URL state to prevent exceeding browser 2KB limits (which causes 414 URI Too Long errors)
     if (copy.fotos && copy.fotos.length > 0) {
       copy.fotos = copy.fotos.map((f: string) => {
-        if (f && f.startsWith("data:image") && f.length > 2500) {
+        if (f && f.startsWith("data:image")) {
+          // If it's a base64 local image, we replace it with "default" so it falls back to the beautiful matching theme design
           return "default";
         }
         return f;
       });
     }
     const str = JSON.stringify(copy);
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => {
-      return String.fromCharCode(parseInt(p1, 16));
-    }));
+    return btoa(unescape(encodeURIComponent(str)));
   } catch (e) {
     console.error("Error al codificar estado para compartir:", e);
     return "";
@@ -51,10 +50,7 @@ const encodeState = (obj: any): string => {
 
 const decodeState = (str: string): any => {
   try {
-    const jsonStr = decodeURIComponent(atob(str).split('').map((c) => {
-      return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(""));
-    return JSON.parse(jsonStr);
+    return JSON.parse(decodeURIComponent(escape(atob(str))));
   } catch (e) {
     console.error("Error al decodificar estado desde compartir:", e);
     return null;
@@ -241,7 +237,19 @@ export default function App() {
 
   // Compartir datos de la invitación final por WhatsApp
   const handleEnviarWhatsApp = () => {
-    const appUrl = window.location.origin + window.location.pathname;
+    let appUrl = window.location.origin + window.location.pathname;
+    // Si estamos en ambiente de desarrollo, iframe de Google AI Studio, o localhost o IP local,
+    // usamos la URL del catálogo de producción que el usuario configuró (https://generadorpruebaxv1.vercel.app/)
+    // para que la invitación sea visible públicamente en internet al enviarla.
+    if (
+      window.location.origin.includes("run.app") || 
+      window.location.origin.includes("localhost") || 
+      window.location.origin.includes("127.0.0.1") ||
+      window.location.origin.includes("google")
+    ) {
+      appUrl = "https://generadorpruebaxv1.vercel.app/";
+    }
+    
     const urlFinal = `${appUrl}?v=1&d=${encodeState(datos)}`;
     const nombreQuince = datos.nombre || "Sophia Valeria";
     
@@ -434,28 +442,43 @@ export default function App() {
     }));
   };
 
-  if (isViewMode) {
-    const htmlContent = generarHTMLFinal(datos, temaActual);
-    return (
-      <div className="w-screen h-screen fixed inset-0 overflow-hidden bg-white z-50">
-        <iframe
-          title="Invitación Interactiva"
-          srcDoc={htmlContent}
-          className="w-full h-full border-0 m-0 p-0 block"
-          style={{ width: "100vw", height: "100vh" }}
-        />
-        {/* Botón flotante elegante para volver al editor */}
+  // Reemplazar el DOM de la página para la vista de los invitados (isViewMode = true)
+  // Esto elimina las restricciones severas de iframe y sandbox del navegador,
+  // permitiendo que el copiado de cuentas de banco, itinerarios, música y mapas funcionen de manera nativa y confiable.
+  useEffect(() => {
+    if (isViewMode) {
+      let htmlContent = generarHTMLFinal(datos, temaActual);
+      
+      // Inyectar un elegante botón flotante de control para poder volver al editor privado si lo desea
+      const buttonHtml = `
         <button
-          onClick={() => {
-            // Quitar los parámetros para abrir el generador / editor privado
-            window.location.href = window.location.origin + window.location.pathname;
-          }}
-          className="fixed bottom-4 right-4 z-50 bg-slate-900/80 hover:bg-slate-900 backdrop-blur-xs text-white text-[11px] font-semibold py-1.5 px-3 rounded-full shadow-lg border border-slate-700/50 flex items-center gap-1.5 transition-all duration-200 cursor-pointer opacity-30 hover:opacity-100"
-          title="Abrir editor de esta invitación"
+          onclick="window.location.href = window.location.origin + window.location.pathname"
+          style="position: fixed; bottom: 16px; right: 16px; z-index: 99999; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: white; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11px; font-weight: 600; padding: 7px 14px; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.25); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
+          onmouseover="this.style.background='rgba(15, 23, 42, 1)'; this.style.transform='scale(1.03)';"
+          onmouseout="this.style.background='rgba(15, 23, 42, 0.85)'; this.style.transform='scale(1)';"
         >
-          <Settings className="w-3.5 h-3.5" />
-          <span>Ver Editor</span>
+          <svg style="width: 13px; height: 13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span>Ajustes Generador</span>
         </button>
+      `;
+      
+      // Adjuntar el botón justo antes de la etiqueta de cierre </body>
+      htmlContent = htmlContent.replace("</body>", `${buttonHtml}</body>`);
+
+      document.open();
+      document.write(htmlContent);
+      document.close();
+    }
+  }, [isViewMode, datos, temaActual]);
+
+  if (isViewMode) {
+    return (
+      <div className="w-screen h-screen fixed inset-0 flex flex-col items-center justify-center bg-slate-50 z-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+        <p className="text-xs text-slate-500 font-medium font-sans">Abriendo tu invitación digital de 15 años...</p>
       </div>
     );
   }
