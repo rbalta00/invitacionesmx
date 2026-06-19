@@ -42,6 +42,10 @@ export default function App() {
   const [htmlCopiado, setHtmlCopiado] = useState(false);
   const [datosCopiados, setDatosCopiados] = useState(false);
 
+  // Estados para compartir por WhatsApp
+  const [whatsappDestino, setWhatsappDestino] = useState("22177445410");
+  const [whatsappTemplateId, setWhatsappTemplateId] = useState("completo");
+
   // Estados locales para nuevos elementos interactivos de listas
   const [nuevoItinHora, setNuevoItinHora] = useState("");
   const [nuevoItinEvento, setNuevoItinEvento] = useState("");
@@ -165,6 +169,40 @@ export default function App() {
         setTimeout(() => setDatosCopiados(false), 2000);
       })
       .catch(err => alert("Error al copiar datos JSON: " + err));
+  };
+
+  // Compartir datos de la invitación final por WhatsApp
+  const handleEnviarWhatsApp = () => {
+    const urlFinal = "https://ais-pre-gt7763na7jvvj2sv6undpi-53430969538.us-west2.run.app";
+    const nombreQuince = datos.nombre || "Sophia Valeria";
+    
+    let fechaBonita = datos.fecha;
+    try {
+      if (datos.fecha) {
+        const d = new Date(datos.fecha);
+        fechaBonita = d.toLocaleDateString("es-MX", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+    } catch (e) {
+      // Usar tal cual si falla
+    }
+
+    let msg = "";
+    if (whatsappTemplateId === "link-only") {
+      msg = `¡Hola! Te comparto el enlace final del Generador de Invitaciones de XV Años para personalizar la tuya: ${urlFinal}`;
+    } else {
+      msg = `¡Hola! Ya está lista la propuesta de invitación digital de XV Años para *${nombreQuince}*. 🌸✨\n\n📅 *Fecha:* ${fechaBonita}\n💒 *Misa:* ${datos.ceremonia.lugar || "Sin especificar"} (${datos.ceremonia.hora || "Sin especificar"} hrs)\n🎉 *Recepción:* ${datos.recepcion.lugar || "Sin especificar"} (${datos.recepcion.hora || "Sin especificar"} hrs)\n\n👉 Puedes ver la vista previa del diseño responsivo en tiempo real interactivo ingresando a este enlace:\n${urlFinal}`;
+    }
+
+    const numberClean = whatsappDestino.replace(/[^0-9]/g, "");
+    const waUrl = `https://api.whatsapp.com/send?phone=${numberClean}&text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, "_blank");
   };
 
   // Procesar archivo cargado localmente (Convertir a Base64)
@@ -547,6 +585,76 @@ export default function App() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* COMPARTIR POR WHATSAPP */}
+                <div className="border-t border-slate-200 pt-6">
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]"></span>
+                    3. Compartir por WhatsApp (Envío Directo)
+                  </h3>
+                  <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl space-y-4">
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Comparte el link para ver y editar esta invitación directamente en WhatsApp.
+                    </p>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Número de Destinatario</label>
+                        <input
+                          type="text"
+                          value={whatsappDestino}
+                          onChange={(e) => setWhatsappDestino(e.target.value)}
+                          placeholder="Ej. 22177445410"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-emerald-500 outline-none font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">Formato de Invitación</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setWhatsappTemplateId("completo")}
+                            className={`p-2 text-center rounded-lg border text-xs font-semibold transition cursor-pointer ${
+                              whatsappTemplateId === "completo"
+                                ? "bg-emerald-600/10 border-emerald-500 text-emerald-800"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            Detalle Completo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setWhatsappTemplateId("link-only")}
+                            className={`p-2 text-center rounded-lg border text-xs font-semibold transition cursor-pointer ${
+                              whatsappTemplateId === "link-only"
+                                ? "bg-emerald-600/10 border-emerald-500 text-emerald-800"
+                                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            Solo Enlace
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleEnviarWhatsApp}
+                      className="w-full py-2.5 bg-[#25D366] hover:bg-[#20ba5a] active:scale-[0.98] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shadow-emerald-500/10"
+                    >
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm12.035-2.024c1.801 0 3.559-.483 5.097-1.397l.365-.217 3.793.994-.101-3.693.24-.382c.983-1.566 1.502-3.39 1.501-5.275C22.99 5.8 18.055 1.12 12.01 1.12c-2.926 0-5.677 1.14-7.747 3.212C2.193 6.405 1.05 9.155 1.05 12.08c0 2.923.77 5.666 2.23 7.728l.243.344-.997 3.642 3.743-.981.36.214a10.932 10.932 0 0 0 5.406 1.413h.001zM17.47 15.3c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                      </svg>
+                      Enviar por WhatsApp
+                    </button>
+                    
+                    <div className="border-t border-emerald-100/50 pt-2.5">
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        El link de edición se actualizará automáticamente con tus cambios actuales para que el destinatario los visualice en su simulación.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
