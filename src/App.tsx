@@ -109,6 +109,7 @@ export default function App() {
   // Estados para compartir por WhatsApp
   const [whatsappDestino, setWhatsappDestino] = useState("522217445410");
   const [whatsappTemplateId, setWhatsappTemplateId] = useState("completo");
+  const [selectedInvitadoIndex, setSelectedInvitadoIndex] = useState<number>(-1);
 
   // Estados locales para nuevos elementos interactivos de listas
   const [nuevoItinHora, setNuevoItinHora] = useState("");
@@ -235,12 +236,9 @@ export default function App() {
       .catch(err => alert("Error al copiar datos JSON: " + err));
   };
 
-  // Compartir datos de la invitación final por WhatsApp
-  const handleEnviarWhatsApp = () => {
+  // Generar URL de compartir con todos los datos y el invitado seleccionado
+  const getShareUrl = (invitadoIndex = selectedInvitadoIndex) => {
     let appUrl = window.location.origin + window.location.pathname;
-    // Si estamos en ambiente de desarrollo, iframe de Google AI Studio, o localhost o IP local,
-    // usamos la URL del catálogo de producción que el usuario configuró (https://generadorpruebaxv1.vercel.app/)
-    // para que la invitación sea visible públicamente en internet al enviarla.
     if (
       window.location.origin.includes("run.app") || 
       window.location.origin.includes("localhost") || 
@@ -250,7 +248,17 @@ export default function App() {
       appUrl = "https://generadorpruebaxv1.vercel.app/";
     }
     
-    const urlFinal = `${appUrl}?v=1&d=${encodeState(datos)}`;
+    let url = `${appUrl}?v=1&d=${encodeState(datos)}`;
+    if (invitadoIndex !== -1 && datos.invitados && datos.invitados[invitadoIndex]) {
+      url += `&g=${encodeURIComponent(datos.invitados[invitadoIndex].nombre)}`;
+    }
+    return url;
+  };
+
+  // Compartir datos de la invitación final por WhatsApp
+  const handleEnviarWhatsApp = (overrideInvitadoIndex?: number) => {
+    const targetIndex = typeof overrideInvitadoIndex === "number" ? overrideInvitadoIndex : selectedInvitadoIndex;
+    const urlFinal = getShareUrl(targetIndex);
     const nombreQuince = datos.nombre || "Sophia Valeria";
     
     let fechaBonita = datos.fecha;
@@ -270,11 +278,22 @@ export default function App() {
       // Usar tal cual si falla
     }
 
+    const hasGuest = targetIndex !== -1 && datos.invitados && datos.invitados[targetIndex];
+    const invitado = hasGuest ? datos.invitados[targetIndex] : null;
+
     let msg = "";
     if (whatsappTemplateId === "link-only") {
-      msg = `🌸 ¡Hola! Te comparto el enlace final de la invitación digital interactiva de XV Años de *${nombreQuince}*: ${urlFinal}`;
+      if (invitado) {
+        msg = `🌸 ¡Hola *${invitado.nombre}*! Te comparto tu pase digital personalizado con *${invitado.pases} boleto(s)* para los XV Años de *${nombreQuince}*: ${urlFinal}`;
+      } else {
+        msg = `🌸 ¡Hola! Te comparto el enlace de la invitación digital interactiva de XV Años de *${nombreQuince}*: ${urlFinal}`;
+      }
     } else {
-      msg = `¡Hola! Ya está lista la propuesta de invitación digital de XV Años para *${nombreQuince}*. 🌸✨\n\n📅 *Fecha:* ${fechaBonita}\n💒 *Misa:* ${datos.ceremonia.lugar || "Sin especificar"} (${datos.ceremonia.hora || "Sin especificar"} hrs)\n🎉 *Recepción:* ${datos.recepcion.lugar || "Sin especificar"} (${datos.recepcion.hora || "Sin especificar"} hrs)\n\n👉 Puedes ver la invitación digital interactiva ingresando a este enlace:\n${urlFinal}`;
+      if (invitado) {
+        msg = `¡Hola *${invitado.nombre}*! Ya está lista tu invitación digital personalizada de XV Años para *${nombreQuince}*. 🌸✨\n\n🎟️ Tienen asignados: **${invitado.pases} pase(s)** familiares\n📅 *Fecha:* ${fechaBonita}\n💒 *Misa:* ${datos.ceremonia.lugar || "Sin especificar"} (${datos.ceremonia.hora || "Sin especificar"} hrs)\n🎉 *Recepción:* ${datos.recepcion.lugar || "Sin especificar"}\n\n👉 Puedes ver tu pase interactivo ingresando a este enlace:\n${urlFinal}`;
+      } else {
+        msg = `¡Hola! Ya está lista la propuesta de invitación digital de XV Años para *${nombreQuince}*. 🌸✨\n\n📅 *Fecha:* ${fechaBonita}\n💒 *Misa:* ${datos.ceremonia.lugar || "Sin especificar"} (${datos.ceremonia.hora || "Sin especificar"} hrs)\n🎉 *Recepción:* ${datos.recepcion.lugar || "Sin especificar"} (${datos.recepcion.hora || "Sin especificar"} hrs)\n\n👉 Puedes ver la invitación digital interactiva ingresando a este enlace:\n${urlFinal}`;
+      }
     }
 
     const numberClean = whatsappDestino.replace(/[^0-9]/g, "");
@@ -714,8 +733,24 @@ export default function App() {
                   </h3>
                   <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl space-y-4">
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Comparte el link para ver y editar esta invitación directamente en WhatsApp.
+                      Comparte el link para ver y editar esta invitación directamente en WhatsApp. El link se genera de manera dinámica combinando tus opciones, temas e invitados.
                     </p>
+                    
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Para Invitado Especial (Opcional)</label>
+                      <select
+                        value={selectedInvitadoIndex}
+                        onChange={(e) => setSelectedInvitadoIndex(Number(e.target.value))}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-emerald-500 outline-none font-sans"
+                      >
+                        <option value="-1">-- Todos / Invitación General --</option>
+                        {datos.invitados && datos.invitados.map((item, index) => (
+                          <option key={index} value={index}>
+                            {item.nombre} ({item.pases} pases)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     
                     <div className="space-y-3">
                       <div>
@@ -753,6 +788,33 @@ export default function App() {
                             }`}
                           >
                             Solo Enlace
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <label className="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-1">Enlace de Invitación Resultante (Elección Actual)</label>
+                        <div className="flex gap-1.5 w-full">
+                          <input
+                            type="text"
+                            readOnly
+                            value={getShareUrl()}
+                            className="flex-1 px-3 py-2 bg-white/75 border border-slate-200 rounded-lg text-slate-600 text-[10px] outline-none font-mono truncate"
+                            title="Este enlace incluye toda tu configuración guardada encriptada en tiempo real"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(getShareUrl())
+                                .then(() => alert("¡Enlace de invitación copiado con éxito! 🌸✨"))
+                                .catch(err => alert("Error al copiar enlace: " + err));
+                            }}
+                            className="px-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-xs"
+                            title="Copiar enlace"
+                          >
+                            <svg className="w-3.5 h-3.5 fill-none stroke-current" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -1372,12 +1434,42 @@ export default function App() {
                               <span className="text-xs font-semibold text-slate-800">{item.nombre}</span>
                               <span className="ml-2 text-[10px] text-indigo-600 font-extrabold font-mono">({item.pases} pases)</span>
                             </div>
-                            <button 
-                              onClick={() => handleEliminarInvitado(index)}
-                              className="p-1 hover:text-rose-600 text-slate-400 rounded transition overflow-hidden cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              {/* Botón copiar link del invitado */}
+                              <button
+                                onClick={() => {
+                                  const customLink = getShareUrl(index);
+                                  navigator.clipboard.writeText(customLink)
+                                    .then(() => alert(`¡Enlace de invitación personalizado para "${item.nombre}" copiado al portapapeles! 🌸`))
+                                    .catch(err => alert("Error al copiar: " + err));
+                                }}
+                                className="p-1 hover:bg-slate-50 text-indigo-600 hover:text-indigo-800 rounded transition cursor-pointer"
+                                title="Copiar enlace personalizado"
+                              >
+                                <svg className="w-3.5 h-3.5 fill-none stroke-current" strokeWidth="2.5" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                              </button>
+
+                              {/* Botón enviar por WhatsApp */}
+                              <button
+                                onClick={() => handleEnviarWhatsApp(index)}
+                                className="p-1 hover:bg-emerald-50 text-emerald-600 hover:text-emerald-700 rounded transition cursor-pointer"
+                                title="Enviar invitación personalizada directo por WhatsApp"
+                              >
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm12.035-2.024c1.801 0 3.559-.483 5.097-1.397l.365-.217 3.793.994-.101-3.693.24-.382c.983-1.566 1.502-3.39 1.501-5.275C22.99 5.8 18.055 1.12c-2.926 0-5.677 1.14-7.747 3.212C2.193 6.405 1.05 9.155 1.05 12.08c0 2.923.77 5.666 2.23 7.728l.243.344-.997 3.642 3.743-.981.36.214a10.932 10.932 0 0 0 5.406 1.413h.001zM17.47 15.3c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                </svg>
+                              </button>
+
+                              <button 
+                                onClick={() => handleEliminarInvitado(index)}
+                                className="p-1 hover:text-rose-600 text-slate-400 rounded transition overflow-hidden cursor-pointer"
+                                title="Eliminar invitado"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

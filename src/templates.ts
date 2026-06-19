@@ -642,6 +642,29 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
 
       // 2. Colocar Fecha en Portada legible de forma humana
       formatearFechaPortada("${datos.fecha}");
+
+      // 3. Auto-búsqueda de pase de invitado por parámetro de URL
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const guestParam = urlParams.get('g') || urlParams.get('guest');
+        if (guestParam) {
+          const inputBuscar = document.getElementById('input-buscar-pase');
+          if (inputBuscar) {
+            inputBuscar.value = guestParam;
+            buscarBoletos();
+            
+            // Hacer scroll suave hacia la sección de pases tras abrir la invitación
+            setTimeout(() => {
+              const pasesSection = document.querySelector('[data-section="pases"]');
+              if (pasesSection) {
+                pasesSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }, 1200);
+          }
+        }
+      } catch (err) {
+        console.warn("Error auto-buscando pase:", err);
+      }
     });
 
     // 1. Manejo del reproductor de sonido
