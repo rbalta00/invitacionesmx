@@ -593,7 +593,9 @@ export const temas: TemaConfig[] = [
       [data-section] > .bg-white.rounded-3xl, 
       [data-section] > .rounded-3xl {
         border: 4px double #FCB5C9 !important;
-        background-color: #FFF9FA !important;
+        background-color: rgba(255, 249, 250, 0.35) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
         background-image: 
           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFA6C9'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5z'/%3E%3C/svg%3E"),
           url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFA6C9'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5z'/%3E%3C/svg%3E") !important;
