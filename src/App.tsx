@@ -212,6 +212,7 @@ export default function App() {
   // Estado para controles de copiado temporal
   const [htmlCopiado, setHtmlCopiado] = useState(false);
   const [datosCopiados, setDatosCopiados] = useState(false);
+  const [generandoEnlace, setGenerandoEnlace] = useState(false);
 
   // Estados para compartir por WhatsApp
   const [whatsappDestino, setWhatsappDestino] = useState("522217445410");
@@ -251,9 +252,14 @@ export default function App() {
     
     // Asignamos el HTML al iframe usando srcdoc para evitar contaminación global de estilos y permitir scripts
     iframeRef.current.srcdoc = htmlString;
+
+    setGenerandoEnlace(true);
+    setTimeout(() => {
+      setGenerandoEnlace(false);
+    }, 1200);
   };
 
-  // Escucha cambios en datos o tema para refrescar la visualización
+  // Escucha cambios en datos o tema para refrescar la visualización en vivo
   useEffect(() => {
     actualizarVistaPrevia();
   }, [datos, temaActual]);
@@ -343,10 +349,39 @@ export default function App() {
       .catch(err => alert("Error al copiar datos JSON: " + err));
   };
 
+  // Generar URL del catálogo de demos
+  const getCatalogUrl = () => {
+    let appUrl = window.location.origin + window.location.pathname;
+    if (
+      window.location.origin.includes("run.app") || 
+      window.location.origin.includes("localhost") || 
+      window.location.origin.includes("127.0.0.1") ||
+      window.location.origin.includes("google")
+    ) {
+      appUrl = "https://generadorpruebaxv1.vercel.app/";
+    }
+    return `${appUrl}?catalog=true`;
+  };
+
   // Generar URL de compartir con todos los datos y el invitado seleccionado
   const getShareUrl = (invitadoIndex = selectedInvitadoIndex) => {
-    const appUrl = window.location.origin + window.location.pathname;
-    let url = `${appUrl}?v=1&d=${encodeState(datos)}`;
+    let appUrl = window.location.origin + window.location.pathname;
+    if (
+      window.location.origin.includes("run.app") || 
+      window.location.origin.includes("localhost") || 
+      window.location.origin.includes("127.0.0.1") ||
+      window.location.origin.includes("google")
+    ) {
+      appUrl = "https://generadorpruebaxv1.vercel.app/";
+    }
+    
+    // Sincronizar el tema activo de forma explícita en los datos decodificables antes de codificar la URL
+    const datosListos = {
+      ...datos,
+      tema: selectedTemaId
+    };
+
+    let url = `${appUrl}?v=1&d=${encodeState(datosListos)}`;
     if (invitadoIndex !== -1 && datos.invitados && datos.invitados[invitadoIndex]) {
       url += `&g=${encodeURIComponent(datos.invitados[invitadoIndex].nombre)}`;
     }
@@ -820,11 +855,11 @@ export default function App() {
         <div id="control-panel-actions" className="flex items-center gap-2 flex-wrap">
           <button 
             onClick={actualizarVistaPrevia} 
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition cursor-pointer shadow-sm"
-            title="Refrescar Vista Previa Celular"
+            className={`px-3.5 py-2 ${generandoEnlace ? 'bg-emerald-650 text-white border-emerald-600 font-extrabold scale-102 shadow-md' : 'bg-white hover:bg-indigo-50/20 hover:border-indigo-200 text-slate-700 border border-slate-200'} text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all duration-300 cursor-pointer shadow-sm`}
+            title="Sincronizar y generar enlace con tus cambios actuales"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-            <span>Generar</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${generandoEnlace ? 'text-white animate-spin' : 'text-indigo-600'}`} />
+            <span>{generandoEnlace ? "¡Sincronizado! ✨" : "Generar invitación"}</span>
           </button>
 
           <button 
@@ -1226,14 +1261,14 @@ export default function App() {
                         <input
                           type="text"
                           readOnly
-                          value={`${window.location.origin}${window.location.pathname}?catalog=true`}
+                          value={getCatalogUrl()}
                           className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 text-[10px] outline-none font-mono truncate"
                           title="Haz clic en copiar para compartir este link de catálogo de demostraciones en vivo"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            const catUrl = `${window.location.origin}${window.location.pathname}?catalog=true`;
+                            const catUrl = getCatalogUrl();
                             navigator.clipboard.writeText(catUrl)
                               .then(() => alert("¡Enlace del Catálogo de Temas copiado con éxito! 📂✨ Admite navegación por todos los demos en vivo."))
                               .catch(err => alert("Error al copiar enlace: " + err));
