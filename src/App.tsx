@@ -725,40 +725,72 @@ export default function App() {
                       key={t.id} 
                       className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col h-full"
                     >
-                      {/* Cabecera visual del tema + Mini Vista Previa Interactiva en Vivo */}
-                      <div className="relative h-64 bg-slate-950 overflow-hidden border-b border-slate-100 group flex items-center justify-center">
-                        {/* Iframe minificado para previsualizar animaciones, sobres, cortinas y colores */}
-                        <div className="absolute inset-x-0 top-0 bottom-0 overflow-hidden">
-                          <iframe 
-                            srcDoc={generarHTMLFinal(datos || datosDefault.premium, t)}
-                            className="w-[200%] h-[200%] absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-50 border-0 pointer-events-none select-none"
-                            title={`Mini-vista ${t.nombre}`}
-                            loading="lazy"
-                          />
-                        </div>
+                      {/* Cabecera visual del tema + Mini Vista Previa Interactiva en Vivo en forma de Celular */}
+                      <div className="relative h-64 bg-slate-950 overflow-hidden border-b border-slate-150 group flex items-center justify-center select-none">
                         
-                        {/* Overlay para dar contraste y realzar el nombre */}
-                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/35 pointer-events-none" />
+                        {/* Fondo de estudio decorativo */}
+                        <div className="absolute inset-0 bg-radial-to-b from-slate-900 via-indigo-950/20 to-slate-950" />
+                        <div className="absolute inset-x-0 top-0 h-[1px] bg-white/5" />
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#33415510_1px,transparent_1px),linear-gradient(to_bottom,#33415510_1px,transparent_1px)] bg-[size:16px_16px] opacity-20" />
 
-                        {/* Indicadores visuales encima */}
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                        {/* Maqueta del Celular Realista */}
+                        <div className="relative z-10 w-[128px] h-[224px] bg-slate-900 rounded-[28px] p-[3px] border-[2px] border-slate-700/85 shadow-[0_12px_28px_-6px_rgba(0,0,0,0.8),0_4px_10px_rgba(0,0,0,0.4)] flex flex-col transition-all duration-300 group-hover:scale-105 group-hover:border-slate-600/90 group-hover:shadow-[0_16px_36px_-8px_rgba(30,27,75,0.7),0_6px_14px_rgba(0,0,0,0.5)]">
+                          
+                          {/* Botones físicos laterales simulados */}
+                          <div className="absolute top-10 -left-[2.5px] w-[2.5px] h-6 bg-slate-700 rounded-l transition-colors duration-300 group-hover:bg-slate-600" />
+                          <div className="absolute top-18 -left-[2.5px] w-[2.5px] h-6 bg-slate-700 rounded-l transition-colors duration-300 group-hover:bg-slate-600" />
+                          <div className="absolute top-14 -right-[2.5px] w-[2.5px] h-10 bg-slate-700 rounded-r transition-colors duration-300 group-hover:bg-slate-600" />
+
+                          {/* Pantalla del celular */}
+                          <div className="w-full h-full rounded-[24px] bg-slate-950 overflow-hidden relative border border-slate-800/80 flex items-center justify-center">
+                            
+                            {/* Isla Dinámica / Muesca superior */}
+                            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-11 h-2.5 bg-black rounded-full z-20 flex items-center justify-start px-1 shadow-inner">
+                              <span className="w-1 h-1 rounded-full bg-slate-900 block opacity-80" />
+                            </div>
+
+                            {/* Ranura del Auricular de llamadas */}
+                            <div className="absolute top-[1.5px] left-1/2 -translate-x-1/2 w-3 h-[0.75px] bg-slate-800/90 rounded-full z-20" />
+
+                            {/* Barra de inicio / Swipe Bar inferior (iOS Style) */}
+                            <div className="absolute bottom-1 w-8 h-0.5 bg-white/40 rounded-full left-1/2 -translate-x-1/2 z-20 shadow-xs" />
+
+                            {/* Iframe minificado cargando el HTML final */}
+                            <div className="w-full h-full overflow-hidden absolute inset-0 bg-slate-950">
+                              <iframe 
+                                srcDoc={generarHTMLFinal(datos || datosDefault.premium, t)}
+                                className="w-[122%] h-[122%] absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-[0.82] border-0 pointer-events-none select-none"
+                                style={{ width: "244px", height: "436px", transform: "scale(0.5) translate(-50%, -50%)", top: "50%", left: "50%" }}
+                                title={`Mini-vista ${t.nombre}`}
+                                loading="lazy"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Capa de degrade de brillo sobre el panel de cabecera */}
+                        <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-slate-950 to-transparent pointer-events-none z-10" />
+
+                        {/* Indicadores visuales y etiquetas */}
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-20">
                           <span className="text-2xl drop-shadow-md">{t.decorativeEmoji}</span>
                           <div className="flex gap-1">
                             {isDarkTheme && (
-                              <span className="bg-indigo-950/80 border border-indigo-500/30 text-[9px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded text-indigo-300">
+                              <span className="bg-indigo-950/85 border border-indigo-550/40 text-[9px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded text-indigo-300 shadow-sm backdrop-blur-xs">
                                 Nocturno 🌙
                               </span>
                             )}
-                            <span className="bg-emerald-950/90 border border-emerald-500/30 text-[8px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded text-emerald-300 backdrop-blur-xs">
+                            <span className="bg-emerald-950/90 border border-emerald-550/40 text-[8px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded text-emerald-300 shadow-sm backdrop-blur-xs">
                               Vista Previa ⚡
                             </span>
                           </div>
                         </div>
 
-                        <div className="absolute bottom-3 left-3 right-3 pointer-events-none">
-                          <h3 className="text-sm font-black tracking-tight text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">
+                        <div className="absolute bottom-3 left-4 right-4 pointer-events-none z-20 flex items-center justify-between">
+                          <span className="text-xs font-black tracking-tight text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.95)]">
                             {t.nombre}
-                          </h3>
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider scale-90 origin-right drop-shadow-xs">Demo Activo</span>
                         </div>
                       </div>
 
