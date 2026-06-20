@@ -681,7 +681,7 @@ export default function App() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {temas.map((t) => {
-                  const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante";
+                  const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante" || t.id === "neon";
                   let descripcion = "Un diseño lujoso y resplandeciente.";
                   if (t.id === "dorado-clasico") descripcion = "Tradicional, majestuoso, elegante. Con detalles dorados clásicos e impecables decoraciones heráldicas ⚜️";
                   if (t.id === "mariposas") descripcion = "Mágico, etéreo y romántico. Cascadas de hermosas mariposas revoloteando sobre una tipografía artesanal 🦋";
@@ -692,6 +692,7 @@ export default function App() {
                   if (t.id === "boho-chic") descripcion = "Rústico, cálido y bohemio. Tonos terracotas, pastos secos y flores de pampa con libre expresión artística 🌾";
                   if (t.id === "princesa-elegante") descripcion = "Digno de la realeza. Distinguido, clásico y de alta alcurnia, con tiaras heráldicas y estética principesca 👑";
                   if (t.id === "marmol-oro") descripcion = "Sofisticado, contemporáneo y ultra premium. Vetas de mármol pulido realzado con costuras de oro pulido 💎";
+                  if (t.id === "neon") descripcion = "Ciberpunk, vibrante y electrizante. Un fondo oscuro de noche urbana iluminado con espectaculares destellos de luz de neón rosa, cian y amarillo-bizarro ⚡";
 
                   return (
                     <div 
@@ -772,20 +773,12 @@ export default function App() {
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div className="pt-1">
                           <button
                             onClick={() => setSelectedCatalogTemaId(t.id)}
-                            className="py-2 bg-indigo-650 hover:bg-indigo-750 text-indigo-600 bg-indigo-50 border border-indigo-200 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer text-center"
+                            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer text-center shadow-xs"
                           >
                             Ver Demo 👁️✨
-                          </button>
-                          <button
-                            onClick={() => {
-                              window.location.href = `${window.location.origin}${window.location.pathname}?tema=${t.id}`;
-                            }}
-                            className="py-2 bg-indigo-600 hover:bg-indigo-750 text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer shadow-xs text-center"
-                          >
-                            Diseñar Aquí 🎨
                           </button>
                         </div>
                       </div>
@@ -990,7 +983,7 @@ export default function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3" id="temas-grid">
                     {temas.map((t) => {
                       const isSelected = selectedTemaId === t.id;
-                      const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante";
+                      const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante" || t.id === "neon";
                       return (
                         <button
                           key={t.id}

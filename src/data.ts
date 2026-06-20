@@ -461,6 +461,53 @@ export const temas: TemaConfig[] = [
         border-radius: 0;
       }
     `
+  },
+  {
+    id: "neon",
+    nombre: "Ciber Cyber Neon ⚡ (Glow)",
+    fontHeading: "Orbitron",
+    fontBody: "Inter",
+    fontCursive: "Sacramento",
+    colors: {
+      primary: "#FF007F",
+      secondary: "#00F0FF",
+      accent: "#DFFF00",
+      dark: "#05050B",
+      light: "#181824",
+      bg: "#020205",
+      border: "#FF007F"
+    },
+    bgGradient: "linear-gradient(135deg, #05050B 0%, #150E28 100%)",
+    textDark: "#00F0FF",
+    textLight: "#FFFFFF",
+    iconStyle: "border-2 border-[#FF007F] rounded-lg text-[#00F0FF] p-2 bg-[#05050B] shadow-[0_0_15px_rgba(255,0,127,0.6)]",
+    decorativeEmoji: "⚡",
+    customStyle: `
+      .theme-container {
+        font-family: 'Inter', sans-serif;
+        background-color: #020205;
+        color: #E2E8F0;
+      }
+      .heading-text {
+        font-family: 'Orbitron', sans-serif;
+        color: #00F0FF;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.6), 0 0 20px rgba(255, 0, 127, 0.4);
+      }
+      .cursive-text {
+        font-family: 'Sacramento', cursive;
+        color: #FF007F;
+        font-size: 2.8rem;
+        text-shadow: 0 0 8px rgba(255, 0, 127, 0.7);
+      }
+      .gold-card {
+        border: 2px solid #FF007F;
+        background: rgba(24, 24, 36, 0.85);
+        box-shadow: 0 0 15px rgba(255, 0, 127, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.15);
+        border-radius: 16px;
+      }
+    `
   }
 ];
 

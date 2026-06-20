@@ -75,6 +75,235 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
   // Definimos de forma segura la visibilidad inicial de las secciones en base al paquete
   const isSectionActive = (secName: string) => seccionesActivas.includes(secName);
 
+  let aperturaHTML = "";
+  if (isSectionActive("apertura")) {
+    if (["mariposas", "floral-acuarela", "boho-chic"].includes(tema.id)) {
+      aperturaHTML = `
+  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 transition-all duration-1000" style="background: ${tema.bgGradient};" onclick="comenzarExperienciaEnvoltura()">
+    <style>
+      .envelope-container {
+        position: relative;
+        width: 310px;
+        height: 210px;
+        background: ${tema.colors.light};
+        border-radius: 0 0 16px 16px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.18);
+        margin-top: 20px;
+        transition: all 0.5s ease;
+      }
+      .envelope-flap {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border-left: 155px solid transparent;
+        border-right: 155px solid transparent;
+        border-top: 105px solid ${tema.colors.border};
+        transform-origin: top;
+        transition: transform 0.6s ease-in-out;
+        z-index: 30;
+      }
+      .envelope-pocket {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: ${tema.colors.bg};
+        border-radius: 0 0 16px 16px;
+        border: 2px solid ${tema.colors.border};
+        z-index: 20;
+      }
+      .envelope-letter {
+        position: absolute;
+        bottom: 10px;
+        left: 15px;
+        right: 15px;
+        height: 170px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        border: 1.5px solid ${tema.colors.border}30;
+        padding: 16px 12px;
+        text-align: center;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .envelope-wax-seal {
+        position: absolute;
+        top: 90px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60px;
+        height: 60px;
+        background: ${tema.colors.accent};
+        color: ${tema.textLight};
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.22);
+        z-index: 40;
+        font-size: 22px;
+        transition: all 0.4s ease;
+        border: 2px solid white;
+        cursor: pointer;
+      }
+      .envelope-wax-seal:hover {
+        transform: translate(-50%, -50%) scale(1.08);
+      }
+      .envelope-container.open .envelope-flap {
+        transform: rotateX(180deg);
+        z-index: 5;
+      }
+      .envelope-container.open .envelope-letter {
+        transform: translateY(-90px) scale(1.05);
+        z-index: 25;
+      }
+      .envelope-container.open .envelope-wax-seal {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+        pointer-events: none;
+      }
+    </style>
+
+    <div class="max-w-md w-full flex flex-col items-center animate-float" onclick="event.stopPropagation()">
+      <p class="text-xs uppercase tracking-[0.25em] font-serif mb-2" style="color: ${tema.colors.accent}; font-weight: 600;">💌 Tienes una invitación exclusiva</p>
+      
+      <div class="envelope-container" id="sobre-interactivo" onclick="comenzarExperienciaEnvoltura()">
+        <div class="envelope-flap"></div>
+        <div class="envelope-letter font-sans">
+          <span class="text-3xl mb-1">${tema.decorativeEmoji}</span>
+          <h4 class="font-serif text-[9px] uppercase tracking-wider text-gray-500">Mis Quince Años</h4>
+          <h3 class="font-cursive text-3.5xl text-accent my-1 font-serif font-black" style="font-family: ${tema.fontHeading}">${datos.nombre}</h3>
+          <p class="text-[9px] text-gray-400 font-sans italic">Es un honor invitarte</p>
+        </div>
+        <div class="envelope-pocket"></div>
+        <div class="envelope-wax-seal">
+          <span>✉️</span>
+        </div>
+      </div>
+      
+      <p class="text-[10px] text-gray-500 mt-6 font-light font-sans">Haz clic en el sobre o el sello para abrir la invitación 🌸</p>
+    </div>
+  </div>`;
+    } else if (["celestial", "princesa-elegante", "neon"].includes(tema.id)) {
+      const ribbonColor = tema.id === "neon" ? "#FF007F" : tema.colors.accent;
+      const oppositeColor = tema.id === "neon" ? "#00F0FF" : tema.colors.border;
+      aperturaHTML = `
+  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex overflow-hidden select-none" onclick="comenzarExperienciaCortina()">
+    <style>
+      .curtain-panel {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 50%;
+        background: ${tema.id === "neon" ? "linear-gradient(to bottom, #090616 0%, #030307 100%)" : "linear-gradient(to bottom, " + tema.colors.dark + " 0%, " + (tema.colors.light === "#FCF9F2" ? "#1A150B" : tema.colors.dark) + " 100%)"};
+        transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-right: 3px solid ${ribbonColor};
+      }
+      .curtain-left {
+        left: 0;
+        box-shadow: 15px 0 40px rgba(0,0,0,0.65);
+      }
+      .curtain-right {
+        right: 0;
+        border-right: none;
+        border-left: 3px solid ${oppositeColor};
+        box-shadow: -15px 0 40px rgba(0,0,0,0.65);
+      }
+      .curtain-seal-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 60;
+        text-align: center;
+        width: 100%;
+        pointer-events: none;
+        transition: all 0.6s ease;
+      }
+      .curtain-seal-circle {
+        width: 100px;
+        height: 100px;
+        background: ${tema.id === "neon" ? "#120D21" : "white"};
+        border: 3px solid ${ribbonColor};
+        color: ${oppositeColor};
+        border-radius: 50%;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 25px ${tema.id === "neon" ? "rgba(255,0,127,0.7)" : "rgba(0,0,0,0.4)"};
+        animation: pulse-glow 2s infinite ease-in-out;
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      @keyframes pulse-glow {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 18px ${tema.id === "neon" ? "rgba(255,0,127,0.5)" : "rgba(218,165,32,0.4)"}; }
+        50% { transform: scale(1.06); box-shadow: 0 0 35px ${tema.id === "neon" ? "rgba(0,240,255,0.8)" : "rgba(218,165,32,0.7)"}; }
+      }
+      .curtains-opened .curtain-left {
+        transform: translateX(-100%);
+      }
+      .curtains-opened .curtain-right {
+        transform: translateX(100%);
+      }
+      .curtains-opened .curtain-seal-container {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+      }
+    </style>
+
+    <div class="curtain-panel curtain-left">
+      <div class="pr-6 text-right w-full font-serif font-black" style="opacity: 0.12; font-size: 80px; color: ${ribbonColor}; line-height: 100px;">XV</div>
+    </div>
+    
+    <div class="curtain-panel curtain-right">
+      <div class="pl-6 text-left w-full font-serif font-black" style="opacity: 0.12; font-size: 80px; color: ${oppositeColor}; line-height: 100px;">XV</div>
+    </div>
+
+    <div class="curtain-seal-container" id="contenedor-sello">
+      <div class="curtain-seal-circle" onclick="comenzarExperienciaCortina()">
+        <span class="text-3xl animate-bounce" style="margin-top: 4px;">✨</span>
+        <span class="text-[9px] uppercase tracking-wider font-extrabold mt-1 font-sans">Gala XV</span>
+        <span class="text-[8px] opacity-75 font-sans font-medium">Entrar</span>
+      </div>
+      <div class="mt-8 px-6">
+        <h2 class="text-xs uppercase tracking-[0.3em] font-semibold font-sans mb-2 text-white/90 drop-shadow-md">Pase de Gala Oficial</h2>
+        <h1 class="font-cursive text-5xl text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)] my-1">${datos.nombre}</h1>
+        <p class="text-[9px] text-gray-300 tracking-widest font-sans uppercase">Toca el sello para descorrer el telón 🎭</p>
+      </div>
+    </div>
+  </div>`;
+    } else {
+      aperturaHTML = `
+  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center transition-all duration-1000" style="background: ${tema.bgGradient};">
+    <div class="max-w-md w-full bg-white/75 backdrop-blur-md rounded-3xl p-8 border border-borderTheme/40 shadow-2xl flex flex-col items-center animate-float">
+      <span class="text-4xl mb-4 text-accent animate-pulse">${tema.decorativeEmoji}</span>
+      <h2 class="font-serif text-xs uppercase tracking-[0.25em] text-gray-500 mb-2">Estás cordialmente invitado a los</h2>
+      <h1 class="font-cursive text-5xl text-accent my-3">XV Años de</h1>
+      <h3 class="font-serif text-3xl font-bold tracking-tight text-dark mb-6">${datos.nombre}</h3>
+      <p class="text-xs text-gray-600 mb-8 font-light italic">Por favor activa el sonido antes de entrar para disfrutar de una mejor experiencia.</p>
+      
+      <button onclick="comenzarExperiencia()" class="relative px-8 py-4 bg-accent text-white font-serif tracking-widest text-xs uppercase rounded-full shadow-lg hover:shadow-xl hover:bg-accent/95 cursor-pointer transform hover:scale-105 active:scale-95 transition-all">
+        ✨ Tocar Para Abrir ✨
+      </button>
+    </div>
+  </div>`;
+    }
+  }
+
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -85,7 +314,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
   <!-- Google Fonts importados para el tema -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Monsieur+La Doulaise&family=Montserrat:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Petit+Formal+Script&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Sacramento&family=Syne:wght@400;700;800&family=WindSong:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Alex+Brush&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Monsieur+La Doulaise&family=Montserrat:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Petit+Formal+Script&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Sacramento&family=Syne:wght@400;700;800&family=WindSong:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -186,21 +415,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
   <!-- ==============================================
        1. SECCIÓN: APERTURA (TOCA PARA ENTRAR)
        ============================================== -->
-  ${isSectionActive("apertura") ? `
-  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center transition-all duration-1000" style="background: ${tema.bgGradient};">
-    <div class="max-w-md w-full bg-white/75 backdrop-blur-md rounded-3xl p-8 border border-borderTheme/40 shadow-2xl flex flex-col items-center animate-float">
-      <span class="text-4xl mb-4 text-accent animate-pulse">${tema.decorativeEmoji}</span>
-      <h2 class="font-serif text-xs uppercase tracking-[0.25em] text-gray-500 mb-2">Estás cordialmente invitado a los</h2>
-      <h1 class="font-cursive text-5xl text-accent my-3">XV Años de</h1>
-      <h3 class="font-serif text-3xl font-bold tracking-tight text-dark mb-6">${datos.nombre}</h3>
-      <p class="text-xs text-gray-600 mb-8 font-light italic">Por favor activa el sonido antes de entrar para disfrutar de una mejor experiencia.</p>
-      
-      <button onclick="comenzarExperiencia()" class="relative px-8 py-4 bg-accent text-white font-serif tracking-widest text-xs uppercase rounded-full shadow-lg hover:shadow-xl hover:bg-accent/95 cursor-pointer transform hover:scale-105 active:scale-95 transition-all">
-        ✨ Tocar Para Abrir ✨
-      </button>
-    </div>
-  </div>
-  ` : ""}
+  ${aperturaHTML}
 
   <!-- ==============================================
        REPRODUCTOR DE MÚSICA BACKGROUND
@@ -702,6 +917,28 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     const speakerBtn = document.getElementById('btn-audio-control');
     const speakerWidget = document.getElementById('music-widget');
     let isPlaying = false;
+
+    function comenzarExperienciaEnvoltura() {
+      const container = document.getElementById('sobre-interactivo');
+      if (container) {
+        if (container.classList.contains('open')) return;
+        container.classList.add('open');
+      }
+      setTimeout(() => {
+        comenzarExperiencia();
+      }, 1500);
+    }
+
+    function comenzarExperienciaCortina() {
+      const container = document.getElementById('pantalla-apertura');
+      if (container) {
+        if (container.classList.contains('curtains-opened')) return;
+        container.classList.add('curtains-opened');
+      }
+      setTimeout(() => {
+        comenzarExperiencia();
+      }, 1250);
+    }
 
     function comenzarExperiencia() {
       // Esconder pantalla de bienvenida
