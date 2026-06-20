@@ -123,6 +123,36 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     /* Estilos personalizados del tema elegido */
     ${tema.customStyle || ""}
 
+    ${datos.bgImages && datos.bgImages[tema.id] ? `
+    /* Imagen de fondo cargada para este tema por separado */
+    .theme-container {
+      background-image: url('${datos.bgImages[tema.id]}') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      background-attachment: fixed !important;
+    }
+    /* Hacer el fondo de apertura, portada y cierre transparentes para que luzca la imagen global */
+    #pantalla-apertura, [data-section="portada"], footer[data-section="cierre"] {
+      background: transparent !important;
+      background-image: none !important;
+    }
+    /* Agregar un velo sutil que de soporte a los temas claros/oscuros */
+    .theme-container::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(10, 8, 20, 0.45)" : "rgba(255, 255, 255, 0.45)"};
+      pointer-events: none;
+      z-index: 1;
+    }
+    /* Elevar todo el contenido sobre el velo */
+    .theme-container > * {
+      position: relative;
+      z-index: 5;
+    }
+    ` : ""}
+
     /* Animaciones sutiles y florituras */
     @keyframes floaty {
       0%, 100% { transform: translateY(0px) rotate(0deg); }

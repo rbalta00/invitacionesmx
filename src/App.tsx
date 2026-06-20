@@ -40,6 +40,17 @@ const encodeState = (obj: any): string => {
         return f;
       });
     }
+    // Filter heavy base64 background images from state to guarantee short, clean, healthy sharing links
+    if (copy.bgImages) {
+      const filteredBg: Record<string, string> = {};
+      for (const [k, v] of Object.entries(copy.bgImages)) {
+        const bgVal = v as string;
+        if (bgVal && !bgVal.startsWith("data:")) {
+          filteredBg[k] = bgVal;
+        }
+      }
+      copy.bgImages = filteredBg;
+    }
     const str = JSON.stringify(copy);
     return btoa(unescape(encodeURIComponent(str)));
   } catch (e) {
@@ -59,10 +70,14 @@ const decodeState = (str: string): any => {
 
 export default function App() {
   // Cargar estado inicial desde la URL si existe para la vista compartida o el editor precargado
-  const getInitialState = (): { initialDatos: InvitacionDatos; initialTemaId: string; isView: boolean } => {
+  const getInitialState = (): { initialDatos: InvitacionDatos; initialTemaId: string; isView: boolean; isCatalog: boolean; initialCatalogTemaId: string | null } => {
     try {
       const params = new URLSearchParams(window.location.search);
       const isView = params.get("v") === "1" || params.get("view") === "true";
+      const isCatalog = params.get("catalog") === "true" || params.get("catalogo") === "true";
+      const initialCatalogTemaId = params.get("tema") || null;
+      let targetTema = params.get("tema") || "mariposas";
+
       const d = params.get("d");
       if (d) {
         const decoded = decodeState(d);
@@ -72,32 +87,124 @@ export default function App() {
               ...datosDefault.premium,
               ...decoded
             },
-            initialTemaId: decoded.tema || "mariposas",
-            isView
+            initialTemaId: decoded.tema || targetTema,
+            isView,
+            isCatalog,
+            initialCatalogTemaId
           };
         }
       }
       return {
         initialDatos: { ...datosDefault.premium },
-        initialTemaId: "mariposas",
-        isView
+        initialTemaId: targetTema,
+        isView,
+        isCatalog,
+        initialCatalogTemaId
       };
     } catch (e) {
       return {
         initialDatos: { ...datosDefault.premium },
         initialTemaId: "mariposas",
-        isView: false
+        isView: false,
+        isCatalog: false,
+        initialCatalogTemaId: null
       };
     }
   };
 
-  const { initialDatos, initialTemaId, isView: isViewMode } = getInitialState();
+  const { initialDatos, initialTemaId, isView: isViewMode, isCatalog: isCatalogInitial, initialCatalogTemaId } = getInitialState();
 
   // Estado principal de los datos de la invitación
   const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
 
   // Estado del tema seleccionado
   const [selectedTemaId, setSelectedTemaId] = useState<string>(initialTemaId);
+
+  // Estados para el catálogo de demostración de temas
+  const [isCatalogMode, setIsCatalogMode] = useState<boolean>(isCatalogInitial);
+  const [selectedCatalogTemaId, setSelectedCatalogTemaId] = useState<string | null>(initialCatalogTemaId);
+
+  // Manejo de carga de imágenes de fondo por tema por separado
+  const handleBgImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("La imagen es demasiado grande. Elige una menor a 10MB con una resolución óptima.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 640;
+        const MAX_HEIGHT = 960;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.55);
+          
+          setDatos(prev => {
+            const currentBgImages = prev.bgImages || {};
+            return {
+              ...prev,
+              bgImages: {
+                ...currentBgImages,
+                [selectedTemaId]: compressedBase64
+              }
+            };
+          });
+          alert(`¡Imagen de fondo cargada y optimizada con éxito para "${temaActual.nombre}"! 🌸`);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBgImageUrlChange = (url: string) => {
+    setDatos(prev => {
+      const currentBgImages = prev.bgImages || {};
+      return {
+        ...prev,
+        bgImages: {
+          ...currentBgImages,
+          [selectedTemaId]: url
+        }
+      };
+    });
+  };
+
+  const handleClearBgImage = () => {
+    setDatos(prev => {
+      const currentBgImages = { ...(prev.bgImages || {}) };
+      delete currentBgImages[selectedTemaId];
+      return {
+        ...prev,
+        bgImages: currentBgImages
+      };
+    });
+    alert(`Se ha de restablecido el fondo por defecto del tema "${temaActual.nombre}".`);
+  };
 
   // Estado para la pestaña de configuración activa en el panel lateral
   const [panelPestana, setPanelPestana] = useState<"ajustes" | "quince" | "lugares" | "itincode" | "familia" | "regalos" | "fotos" | "invitados">("ajustes");
@@ -502,6 +609,197 @@ export default function App() {
     );
   }
 
+  if (isCatalogMode) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col animate-fadeIn">
+        {/* ENCABEZADO DENTRO DE VISTA CATALOGO */}
+        {selectedCatalogTemaId ? (
+          <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs sticky top-0 z-50">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSelectedCatalogTemaId(null)}
+                className="p-1 px-3 bg-slate-100 hover:bg-slate-200 text-slate-705 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer"
+              >
+                ← Volver al Catálogo
+              </button>
+              <div>
+                <h2 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Visualizando Demo Interactiva</h2>
+                <p className="text-xs font-extrabold text-indigo-600 flex items-center gap-1">
+                  {temas.find(t => t.id === selectedCatalogTemaId)?.nombre || "Tema Elegido"}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  window.location.href = `${window.location.origin}${window.location.pathname}?tema=${selectedCatalogTemaId}`;
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-xs active:scale-95 cursor-pointer"
+              >
+                Elegir y Editar este Diseño 🎨
+              </button>
+            </div>
+          </div>
+        ) : (
+          <header className="bg-gradient-to-r from-indigo-900 to-indigo-950 text-white py-10 px-6 text-center shrink-0">
+            <div className="max-w-4xl mx-auto space-y-3">
+              <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-extrabold tracking-wider text-indigo-200 uppercase">
+                Colección Premium XV Años ⚜️
+              </span>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                Catálogo de Invitaciones Digitales Interactivas
+              </h1>
+              <p className="text-xs md:text-sm text-indigo-200 max-w-2xl mx-auto leading-relaxed">
+                Explora cada uno de nuestros 9 temas exclusivos con todos los efectos interactivos en vivo: música, mapas de ceremonia, control de pases de invitados y galerías de fotos.
+              </p>
+              <div className="pt-2">
+                <button
+                  onClick={() => setIsCatalogMode(false)}
+                  className="px-4 py-1.5 bg-white hover:bg-indigo-50 text-indigo-900 text-xs font-bold rounded-lg transition shadow-md active:scale-95 cursor-pointer"
+                >
+                  Regresar al Generador Privado ✍️
+                </button>
+              </div>
+            </div>
+          </header>
+        )}
+
+        {/* CONTAINER DEL CONTENIDO */}
+        <div className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6">
+          {selectedCatalogTemaId ? (
+            /* Render del Demo en vivo dentro de un iframe interactivo */
+            <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-slate-200 overflow-hidden shadow-xl bg-white">
+              <iframe
+                srcDoc={generarHTMLFinal(datosDefault.premium, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
+                className="w-full h-full border-0"
+                title="Invitación Demo en Vivo"
+              />
+            </div>
+          ) : (
+            /* Listado de tarjetas de catálogo de todos los temas */
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {temas.map((t) => {
+                  const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante";
+                  let descripcion = "Un diseño lujoso y resplandeciente.";
+                  if (t.id === "dorado-clasico") descripcion = "Tradicional, majestuoso, elegante. Con detalles dorados clásicos e impecables decoraciones heráldicas ⚜️";
+                  if (t.id === "mariposas") descripcion = "Mágico, etéreo y romántico. Cascadas de hermosas mariposas revoloteando sobre una tipografía artesanal 🦋";
+                  if (t.id === "floral-acuarela") descripcion = "Fresco, primaveral y sumamente artístico. Ramos florales en acuarela pintados a mano en tonos rosa pastel 🌸";
+                  if (t.id === "celestial") descripcion = "Místico, nocturno y estrellado. Un firmamento azul profundo con lunas y constelaciones doradas brillando celestialmente 🌙";
+                  if (t.id === "botanico") descripcion = "Natural, orgánico y minimalista. Un santuario de eucalipto fresco y sutiles hojas verdes para una vibra moderna 🌿";
+                  if (t.id === "glam-rose") descripcion = "Moderno, ultra glamuroso y chic. Tonos oro rosa metálicos y polvos de escarcha para celebraciones alegres 💖";
+                  if (t.id === "boho-chic") descripcion = "Rústico, cálido y bohemio. Tonos terracotas, pastos secos y flores de pampa con libre expresión artística 🌾";
+                  if (t.id === "princesa-elegante") descripcion = "Digno de la realeza. Distinguido, clásico y de alta alcurnia, con tiaras heráldicas y estética principesca 👑";
+                  if (t.id === "marmol-oro") descripcion = "Sofisticado, contemporáneo y ultra premium. Vetas de mármol pulido realzado con costuras de oro pulido 💎";
+
+                  return (
+                    <div 
+                      key={t.id} 
+                      className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col h-full"
+                    >
+                      {/* Cabecera visual del tema */}
+                      <div 
+                        className="h-28 flex flex-col justify-between p-4 text-white relative bg-cover bg-center"
+                        style={{ background: t.bgGradient }}
+                      >
+                        <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                        
+                        <div className="flex items-center justify-between relative z-10">
+                          <span className="text-[28px]">{t.decorativeEmoji}</span>
+                          {isDarkTheme && (
+                            <span className="bg-indigo-950/80 border border-indigo-700/50 text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded text-indigo-200">
+                              Nocturno
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="relative z-10">
+                          <h3 
+                            className="text-base font-black tracking-tight text-white drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.45)]"
+                          >
+                            {t.nombre}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Cuerpo de detalles */}
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-3">
+                          <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                            {descripcion}
+                          </p>
+
+                          {/* Estilo tipográfico */}
+                          <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg space-y-2">
+                            <div>
+                              <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">Título Principal</span>
+                              <span 
+                                className="text-sm text-slate-800 font-semibold"
+                                style={{ fontFamily: t.fontHeading }}
+                              >
+                                Sofía Valeria
+                              </span>
+                            </div>
+                            {t.fontCursive && (
+                              <div>
+                                <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-extrabold">Firma Cursiva</span>
+                                <span 
+                                  className="text-base text-slate-700 block"
+                                  style={{ fontFamily: t.fontCursive }}
+                                >
+                                  Mis Quince Años
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Paleta de colores */}
+                          <div>
+                            <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">Paleta Oficial</span>
+                            <div className="flex gap-2">
+                              {Object.entries(t.colors).map(([key, val]) => (
+                                <div key={key} className="flex flex-col items-center">
+                                  <div 
+                                    className="w-5.5 h-5.5 rounded-full border border-slate-200 shadow-2xs" 
+                                    style={{ backgroundColor: val }}
+                                    title={key}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Botones de acción */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button
+                            onClick={() => setSelectedCatalogTemaId(t.id)}
+                            className="py-2 bg-indigo-650 hover:bg-indigo-750 text-indigo-600 bg-indigo-50 border border-indigo-200 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer text-center"
+                          >
+                            Ver Demo 👁️✨
+                          </button>
+                          <button
+                            onClick={() => {
+                              window.location.href = `${window.location.origin}${window.location.pathname}?tema=${t.id}`;
+                            }}
+                            className="py-2 bg-indigo-600 hover:bg-indigo-750 text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer shadow-xs text-center"
+                          >
+                            Diseñar Aquí 🎨
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       
@@ -723,6 +1021,83 @@ export default function App() {
                       );
                     })}
                   </div>
+
+                  {/* CARGADOR DE FONDO POR TEMA */}
+                  <div className="mt-4 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/70 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-indigo-600 rounded-lg text-white animate-pulse">
+                        <Upload className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Fondo para {temaActual.nombre}</h4>
+                        <p className="text-[11px] text-slate-500">Carga un fondo único para este tema por separado.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Indicador de estado */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-600 font-medium font-sans">Estado del fondo:</span>
+                        {datos.bgImages?.[selectedTemaId] ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></span>
+                            Personalizado ({datos.bgImages[selectedTemaId].startsWith("data:") ? "Archivo" : "URL"})
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-medium font-sans">
+                            Predeterminado (Gradiente del Tema)
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        {/* Subir archivo */}
+                        <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-indigo-200 rounded-xl bg-white hover:bg-indigo-50/20 active:scale-[0.98] transition-all cursor-pointer text-center group shadow-xs">
+                          <Upload className="w-5 h-5 text-indigo-500 group-hover:text-indigo-600 mb-1" />
+                          <span className="text-xs font-bold text-indigo-700 font-sans">Subir Archivo 📁</span>
+                          <span className="text-[9px] text-slate-400 mt-0.5 font-sans">Automáticamente optimizado</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleBgImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {/* Restaurar */}
+                        <button
+                          type="button"
+                          onClick={handleClearBgImage}
+                          disabled={!datos.bgImages?.[selectedTemaId]}
+                          className={`flex flex-col items-center justify-center p-3 border rounded-xl font-sans transition-all active:scale-[0.98] text-center shadow-xs ${
+                            datos.bgImages?.[selectedTemaId]
+                              ? "bg-white border-rose-205 hover:bg-rose-50/50 cursor-pointer text-rose-700"
+                              : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                          }`}
+                        >
+                          <Trash2 className="w-5 h-5 mb-1" />
+                          <span className="text-xs font-bold font-sans">Restablecer Fondo</span>
+                          <span className="text-[9px] opacity-75 mt-0.5 font-sans font-medium">Volver a los valores por defecto</span>
+                        </button>
+                      </div>
+
+                      {/* Pegar URL */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-705 mb-1 font-sans">O Pegar Enlace Directo de Imagen 🔗</label>
+                        <input
+                          type="text"
+                          value={datos.bgImages?.[selectedTemaId] && !datos.bgImages[selectedTemaId].startsWith("data:") ? datos.bgImages[selectedTemaId] : ""}
+                          onChange={(e) => handleBgImageUrlChange(e.target.value)}
+                          placeholder="Ej. https://images.unsplash.com/photo-..."
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-indigo-600 outline-none font-sans"
+                          title="Puedes pegar un link público de Unsplash, Pinterest u otro hosting de fotos."
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1 font-sans">
+                          Utilizar un enlace directo a Internet es idóneo para evitar sobrecargar la capacidad del link codificado.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* COMPARTIR POR WHATSAPP */}
@@ -834,6 +1209,58 @@ export default function App() {
                       <p className="text-[10px] text-slate-500 font-medium">
                         El link de edición se actualizará automáticamente con tus cambios actuales para que el destinatario los visualice en su simulación.
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ENLACE DEL CATÁLOGO DE DEMOS */}
+                <div className="border-t border-slate-200 pt-6">
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                    4. Catálogo Digital de Temas (Demos Interactivas)
+                  </h3>
+                  <div className="p-4 bg-indigo-50/50 border border-indigo-100/70 rounded-xl space-y-4">
+                    <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                      Genera y comparte un link público para que tus clientes o invitados visualicen un precioso catálogo con botones para probar en vivo la demo interactiva de cada uno de los 9 temas.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-slate-700">Enlace de Tu Catálogo de Temas 🔗</label>
+                      <div className="flex gap-1.5 w-full">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`${window.location.origin}${window.location.pathname}?catalog=true`}
+                          className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 text-[10px] outline-none font-mono truncate"
+                          title="Haz clic en copiar para compartir este link de catálogo de demostraciones en vivo"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const catUrl = `${window.location.origin}${window.location.pathname}?catalog=true`;
+                            navigator.clipboard.writeText(catUrl)
+                              .then(() => alert("¡Enlace del Catálogo de Temas copiado con éxito! 📂✨ Admite navegación por todos los demos en vivo."))
+                              .catch(err => alert("Error al copiar enlace: " + err));
+                          }}
+                          className="px-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-xs"
+                          title="Copiar enlace del catálogo"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCatalogMode(true);
+                        }}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shadow-indigo-500/10 font-sans"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Abrir / Probar Catálogo de Temas 👁️
+                      </button>
                     </div>
                   </div>
                 </div>

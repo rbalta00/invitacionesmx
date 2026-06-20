@@ -36,6 +36,7 @@ export interface InvitacionDatos {
     nombre: string;
     pases: number;
   }>;
+  bgImages?: Record<string, string>;
 }
 
 export interface PaqueteConfig {
