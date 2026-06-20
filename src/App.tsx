@@ -345,16 +345,7 @@ export default function App() {
 
   // Generar URL de compartir con todos los datos y el invitado seleccionado
   const getShareUrl = (invitadoIndex = selectedInvitadoIndex) => {
-    let appUrl = window.location.origin + window.location.pathname;
-    if (
-      window.location.origin.includes("run.app") || 
-      window.location.origin.includes("localhost") || 
-      window.location.origin.includes("127.0.0.1") ||
-      window.location.origin.includes("google")
-    ) {
-      appUrl = "https://generadorpruebaxv1.vercel.app/";
-    }
-    
+    const appUrl = window.location.origin + window.location.pathname;
     let url = `${appUrl}?v=1&d=${encodeState(datos)}`;
     if (invitadoIndex !== -1 && datos.invitados && datos.invitados[invitadoIndex]) {
       url += `&g=${encodeURIComponent(datos.invitados[invitadoIndex].nombre)}`;
@@ -699,26 +690,38 @@ export default function App() {
                       key={t.id} 
                       className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col h-full"
                     >
-                      {/* Cabecera visual del tema */}
-                      <div 
-                        className="h-28 flex flex-col justify-between p-4 text-white relative bg-cover bg-center"
-                        style={{ background: t.bgGradient }}
-                      >
-                        <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+                      {/* Cabecera visual del tema + Mini Vista Previa Interactiva en Vivo */}
+                      <div className="relative h-64 bg-slate-950 overflow-hidden border-b border-slate-100 group flex items-center justify-center">
+                        {/* Iframe minificado para previsualizar animaciones, sobres, cortinas y colores */}
+                        <div className="absolute inset-x-0 top-0 bottom-0 overflow-hidden">
+                          <iframe 
+                            srcDoc={generarHTMLFinal(datos || datosDefault.premium, t)}
+                            className="w-[200%] h-[200%] absolute top-0 left-1/2 -translate-x-1/2 origin-top scale-50 border-0 pointer-events-none select-none"
+                            title={`Mini-vista ${t.nombre}`}
+                            loading="lazy"
+                          />
+                        </div>
                         
-                        <div className="flex items-center justify-between relative z-10">
-                          <span className="text-[28px]">{t.decorativeEmoji}</span>
-                          {isDarkTheme && (
-                            <span className="bg-indigo-950/80 border border-indigo-700/50 text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded text-indigo-200">
-                              Nocturno
+                        {/* Overlay para dar contraste y realzar el nombre */}
+                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/35 pointer-events-none" />
+
+                        {/* Indicadores visuales encima */}
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                          <span className="text-2xl drop-shadow-md">{t.decorativeEmoji}</span>
+                          <div className="flex gap-1">
+                            {isDarkTheme && (
+                              <span className="bg-indigo-950/80 border border-indigo-500/30 text-[9px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded text-indigo-300">
+                                Nocturno 🌙
+                              </span>
+                            )}
+                            <span className="bg-emerald-950/90 border border-emerald-500/30 text-[8px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded text-emerald-300 backdrop-blur-xs">
+                              Vista Previa ⚡
                             </span>
-                          )}
+                          </div>
                         </div>
 
-                        <div className="relative z-10">
-                          <h3 
-                            className="text-base font-black tracking-tight text-white drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.45)]"
-                          >
+                        <div className="absolute bottom-3 left-3 right-3 pointer-events-none">
+                          <h3 className="text-sm font-black tracking-tight text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)]">
                             {t.nombre}
                           </h3>
                         </div>
