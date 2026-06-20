@@ -599,26 +599,7 @@ export default function App() {
   // permitiendo que el copiado de cuentas de banco, itinerarios, música y mapas funcionen de manera nativa y confiable.
   useEffect(() => {
     if (isViewMode) {
-      let htmlContent = generarHTMLFinal(datos, temaActual);
-      
-      // Inyectar un elegante botón flotante de control para poder volver al editor privado si lo desea
-      const buttonHtml = `
-        <button
-          onclick="window.location.href = window.location.origin + window.location.pathname"
-          style="position: fixed; bottom: 16px; right: 16px; z-index: 99999; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: white; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11px; font-weight: 600; padding: 7px 14px; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.25); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;"
-          onmouseover="this.style.background='rgba(15, 23, 42, 1)'; this.style.transform='scale(1.03)';"
-          onmouseout="this.style.background='rgba(15, 23, 42, 0.85)'; this.style.transform='scale(1)';"
-        >
-          <svg style="width: 13px; height: 13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-          <span>Ajustes Generador</span>
-        </button>
-      `;
-      
-      // Adjuntar el botón justo antes de la etiqueta de cierre </body>
-      htmlContent = htmlContent.replace("</body>", `${buttonHtml}</body>`);
+      const htmlContent = generarHTMLFinal(datos, temaActual);
 
       document.open();
       document.write(htmlContent);
@@ -682,14 +663,6 @@ export default function App() {
               <p className="text-xs md:text-sm text-indigo-200 max-w-2xl mx-auto leading-relaxed">
                 Explora cada uno de nuestros 9 temas exclusivos con todos los efectos interactivos en vivo: música, mapas de ceremonia, control de pases de invitados y galerías de fotos.
               </p>
-              <div className="pt-2">
-                <button
-                  onClick={() => setIsCatalogMode(false)}
-                  className="px-4 py-1.5 bg-white hover:bg-indigo-50 text-indigo-900 text-xs font-bold rounded-lg transition shadow-md active:scale-95 cursor-pointer"
-                >
-                  Regresar al Generador Privado ✍️
-                </button>
-              </div>
             </div>
           </header>
         )}
