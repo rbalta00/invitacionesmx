@@ -380,6 +380,18 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       position: relative;
       z-index: 5;
     }
+    
+    /* Cajones y tarjetas translúcidas cuando hay imagen de fondo */
+    .theme-container .bg-white.rounded-3xl, 
+    .theme-container .gold-card,
+    .theme-container [data-section] > .bg-white,
+    .theme-container [data-section] > .rounded-3xl {
+      background-color: ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(17, 27, 48, 0.65)" : "rgba(255, 255, 255, 0.75)"} !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      border: 1px solid ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(255,255,255,0.15)" : "rgba(255, 255, 255, 0.5)"} !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+    }
     ` : ""}
 
     /* Animaciones sutiles y florituras */
@@ -492,7 +504,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
          3. SECCIÓN: CUENTA REGRESIVA
          ============================================== -->
     ${isSectionActive("cuenta") ? `
-    <section data-section="cuenta" class="p-6 text-center bg-white border-b border-gray-100">
+    <section data-section="cuenta" class="p-6 text-center bg-transparent">
       <h3 class="font-serif text-xs uppercase tracking-[0.2em] text-gray-400 mb-4">Solo Faltan</h3>
       <div class="grid grid-cols-4 gap-2 max-w-xs mx-auto">
         <div class="bg-[${tema.colors.light}] p-3 rounded-2xl border border-borderTheme/25">
@@ -519,7 +531,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
          4. SECCIÓN: MENSAJE DE BIENVENIDA
          ============================================== -->
     ${isSectionActive("mensaje") ? `
-    <section data-section="mensaje" class="p-8 text-center bg-[#FDFDFD] relative border-b border-gray-50">
+    <section data-section="mensaje" class="p-8 text-center bg-transparent relative">
       <div class="absolute inset-x-0 top-0 flex justify-center transform -translate-y-1/2">
         <span class="bg-white px-4 py-1.5 border border-borderTheme/40 rounded-full shadow-xs text-accent text-sm font-semibold">${tema.decorativeEmoji}</span>
       </div>
