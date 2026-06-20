@@ -878,20 +878,20 @@ export default function App() {
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="pt-1 flex flex-col sm:flex-row gap-2">
+                        <div className="pt-2 flex flex-col gap-2">
                           <button
                             onClick={() => setSelectedCatalogTemaId(t.id)}
-                            className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer text-center shadow-xs"
+                            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all duration-200 active:scale-95 cursor-pointer text-center shadow-md flex items-center justify-center gap-1.5"
                           >
-                            Ver Demo 👁️✨
+                            Ver Demo en Vivo 👁️✨
                           </button>
                           <a
                             href="https://w.app/invitamx"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-750 border border-emerald-500/10 text-white text-[11px] font-bold rounded-lg transition active:scale-94 cursor-pointer text-center shadow-xs flex items-center justify-center gap-1"
+                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all duration-200 active:scale-95 cursor-pointer text-center shadow-md flex items-center justify-center gap-1.5"
                           >
-                            Pedir por WhatsApp 💬
+                            Pedir este Tema por WhatsApp 💬
                           </a>
                         </div>
                       </div>

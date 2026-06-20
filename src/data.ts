@@ -593,7 +593,13 @@ export const temas: TemaConfig[] = [
       [data-section] > .bg-white.rounded-3xl, 
       [data-section] > .rounded-3xl {
         border: 4px double #FCB5C9 !important;
-        background: #FFF9FA !important;
+        background-color: #FFF9FA !important;
+        background-image: 
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFA6C9'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5z'/%3E%3C/svg%3E"),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFA6C9'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5z'/%3E%3C/svg%3E") !important;
+        background-position: top 14px right 14px, bottom 14px left 14px !important;
+        background-size: 18px 18px, 18px 18px !important;
+        background-repeat: no-repeat !important;
         box-shadow: 0 10px 25px rgba(228, 93, 140, 0.08) !important;
         border-radius: 20px !important;
         position: relative !important;
