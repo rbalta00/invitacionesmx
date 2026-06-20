@@ -77,7 +77,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
 
   let aperturaHTML = "";
   if (isSectionActive("apertura")) {
-    if (["mariposas", "floral-acuarela", "boho-chic"].includes(tema.id)) {
+    if (["mariposas", "floral-acuarela", "boho-chic", "coquette-pink"].includes(tema.id)) {
       aperturaHTML = `
   <div id="pantalla-apertura" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 transition-all duration-1000" style="background: ${tema.bgGradient};" onclick="comenzarExperienciaEnvoltura()">
     <style>
@@ -314,7 +314,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
   <!-- Google Fonts importados para el tema -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Alex+Brush&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Monsieur+La Doulaise&family=Montserrat:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Petit+Formal+Script&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Sacramento&family=Syne:wght@400;700;800&family=WindSong:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Alex+Brush&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Monsieur+La Doulaise&family=Montserrat:wght@300;400;600;700&family=Outfit:wght@300;400;600;700&family=Parisienne&family=Pinyon+Script&family=Petit+Formal+Script&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Sacramento&family=Syne:wght@400;700;800&family=WindSong:wght@400;500&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>

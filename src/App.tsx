@@ -656,6 +656,18 @@ export default function App() {
               </div>
             </div>
             
+            <div className="flex items-center gap-2">
+              <a
+                href="https://w.app/invitamx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <span className="hidden sm:inline">¡Me interesa este Tema!</span>
+                <span>Pedir por WhatsApp 💬</span>
+              </a>
+            </div>
+            
 
           </div>
         ) : (
@@ -866,13 +878,21 @@ export default function App() {
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="pt-1">
+                        <div className="pt-1 flex flex-col sm:flex-row gap-2">
                           <button
                             onClick={() => setSelectedCatalogTemaId(t.id)}
-                            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer text-center shadow-xs"
+                            className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer text-center shadow-xs"
                           >
                             Ver Demo 👁️✨
                           </button>
+                          <a
+                            href="https://w.app/invitamx"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-750 border border-emerald-500/10 text-white text-[11px] font-bold rounded-lg transition active:scale-94 cursor-pointer text-center shadow-xs flex items-center justify-center gap-1"
+                          >
+                            Pedir por WhatsApp 💬
+                          </a>
                         </div>
                       </div>
                     </div>

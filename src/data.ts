@@ -508,6 +508,178 @@ export const temas: TemaConfig[] = [
         border-radius: 16px;
       }
     `
+  },
+  {
+    id: "coquette-pink",
+    nombre: "XV Coquette Rose 🎀 (Glam & Sparkle)",
+    fontHeading: "Playfair Display",
+    fontBody: "Inter",
+    fontCursive: "Parisienne",
+    colors: {
+      primary: "#E45D8C",
+      secondary: "#FFA6C9",
+      accent: "#E45D8C",
+      dark: "#472F35",
+      light: "#FEE2E7",
+      bg: "#FDECEF",
+      border: "#FCB5C9"
+    },
+    bgGradient: "linear-gradient(135deg, #FEE2E7 0%, #FAECF0 100%)",
+    textDark: "#472F35",
+    textLight: "#FFFFFF",
+    iconStyle: "border border-[#E45D8C] rounded-full text-[#E45D8C] p-2.5 bg-white shadow-[0_2px_10px_rgba(228,93,140,0.08)]",
+    decorativeEmoji: "🎀",
+    customStyle: `
+      .theme-container {
+        font-family: 'Inter', sans-serif;
+        background-color: #FDECEF;
+        color: #472F35;
+        background-image: radial-gradient(#FCB5C965 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+        position: relative;
+      }
+      .heading-text {
+        font-family: 'Playfair Display', serif;
+        color: #E45D8C;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        text-shadow: 0 1px 1px rgba(0,0,0,0.02);
+      }
+      .cursive-text {
+        font-family: 'Parisienne', cursive;
+        color: #E45D8C;
+        font-size: 3.4rem;
+        line-height: 1.1;
+        position: relative;
+        display: inline-block;
+        padding-left: 20px;
+        padding-right: 20px;
+        text-shadow: 0 1px 2px rgba(228,93,140,0.1);
+      }
+      
+      /* Destellos ✨ a los lados de los textos cursivos o títulos */
+      .cursive-text::before {
+        content: '✨';
+        position: absolute;
+         left: -6px;
+        top: 20%;
+        font-size: 16px;
+        color: #FFA6C9;
+        animation: coquette-sparkle-pulse 2s infinite ease-in-out;
+      }
+      .cursive-text::after {
+        content: '✨';
+        position: absolute;
+        right: -6px;
+        top: 20%;
+        font-size: 16px;
+        color: #FFA6C9;
+        animation: coquette-sparkle-pulse 2s infinite ease-in-out 1s;
+      }
+
+      /* Moño superior decorativo de la portada */
+      [data-section="portada"] .font-serif.text-gray-500.mb-1::before {
+        content: "🎀" !important;
+        display: block !important;
+        font-size: 38px !important;
+        margin-top: -12px !important;
+        margin-bottom: 8px !important;
+        filter: drop-shadow(0 2px 5px rgba(228, 93, 140, 0.25)) !important;
+        animation: coquette-float-bow 3s ease-in-out infinite alternate !important;
+      }
+
+      /* Cajones / Cuadros de Sección Coquette con Ondas Dobles y Listones */
+      .gold-card, 
+      [data-section] > .bg-white.rounded-3xl, 
+      [data-section] > .rounded-3xl {
+        border: 4px double #FCB5C9 !important;
+        background: #FFF9FA !important;
+        box-shadow: 0 10px 25px rgba(228, 93, 140, 0.08) !important;
+        border-radius: 20px !important;
+        position: relative !important;
+        padding: 1.5rem !important;
+        overflow: visible !important;
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+      }
+
+      /* Listón 🎀 rosa superior izquierdo */
+      .gold-card::before, 
+      [data-section] > .bg-white.rounded-3xl::before, 
+      [data-section] > .rounded-3xl::before {
+        content: '🎀' !important;
+        position: absolute !important;
+        top: -16px !important;
+        left: -14px !important;
+        font-size: 32px !important;
+        z-index: 20 !important;
+        filter: drop-shadow(0 3px 6px rgba(228, 93, 140, 0.35)) !important;
+        animation: coquette-float-bow 2.5s ease-in-out infinite alternate !important;
+      }
+      
+      /* Listón 🎀 rosa inferior derecho */
+      .gold-card::after, 
+      [data-section] > .bg-white.rounded-3xl::after, 
+      [data-section] > .rounded-3xl::after {
+        content: '🎀' !important;
+        position: absolute !important;
+        bottom: -16px !important;
+        right: -14px !important;
+        font-size: 32px !important;
+        z-index: 20 !important;
+        filter: drop-shadow(0 3px 6px rgba(228, 93, 140, 0.35)) !important;
+        animation: coquette-float-bow-reverse 2.5s ease-in-out infinite alternate !important;
+      }
+
+      /* Decorativo interior de los cajones h3 */
+      .gold-card h3::before,
+      [data-section] h3::before {
+        content: '✨ ';
+        color: #E45D8C;
+        font-size: 14px;
+        opacity: 0.85;
+      }
+      .gold-card h3::after,
+      [data-section] h3::after {
+        content: ' ✨';
+        color: #E45D8C;
+        font-size: 14px;
+        opacity: 0.85;
+      }
+
+      /* Estilo de los campos de entrada */
+      .gold-card input, 
+      .gold-card select,
+      [data-section] input,
+      [data-section] select {
+        border-color: #FCB5C9 !important;
+        background-color: #FFFFFF !important;
+        color: #472F35 !important;
+        border-width: 1.5px !important;
+      }
+      .gold-card input:focus, 
+      .gold-card select:focus,
+      [data-section] input:focus,
+      [data-section] select:focus {
+        border-color: #E45D8C !important;
+        box-shadow: 0 0 0 3px rgba(228, 93, 140, 0.15) !important;
+        outline: none !important;
+      }
+
+      /* Animaciones */
+      @keyframes coquette-float-bow {
+        0% { transform: translateY(0) rotate(-6deg) scale(1); }
+        100% { transform: translateY(-3px) rotate(6deg) scale(1.05); }
+      }
+      @keyframes coquette-float-bow-reverse {
+        0% { transform: translateY(0) rotate(6deg) scale(1.02); }
+        100% { transform: translateY(3px) rotate(-6deg) scale(0.97); }
+      }
+      @keyframes coquette-sparkle-pulse {
+        0%, 100% { transform: scale(0.9) rotate(0deg); opacity: 0.5; }
+        50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+      }
+    `
   }
 ];
 
@@ -544,7 +716,8 @@ export const fotosFicticiasDefault: Record<string, string[]> = {
 
 export const getFotosPorTema = (temaId: string): string[] => {
   // Retorna fotos ficticias predefinidas para el tema o las generales
-  return fotosFicticiasDefault[temaId] || fotosFicticiasDefault["dorado-clasico"];
+  const actualId = temaId === "coquette-pink" ? "mariposas" : temaId;
+  return fotosFicticiasDefault[actualId] || fotosFicticiasDefault["dorado-clasico"];
 };
 
 export const datosDefault: Record<"basico" | "premium" | "deluxe", InvitacionDatos> = {
