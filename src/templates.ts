@@ -354,8 +354,11 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
 
     ${datos.bgImages && datos.bgImages[tema.id] ? `
     /* Imagen de fondo cargada para este tema por separado */
-    html, body {
+    html {
       background: transparent !important;
+    }
+    body {
+      background-color: transparent !important;
     }
     .theme-container {
       background-image: url('${datos.bgImages[tema.id]}') !important;

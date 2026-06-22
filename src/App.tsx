@@ -2080,8 +2080,8 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🖼️</span>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">
-                        Fondo de la Invitación
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest animate-fadeIn">
+                        Fondo de la Invitación ({temaActual.nombre})
                       </h4>
                       <p className="text-[10px] text-slate-500">Sube una imagen de fondo personalizada para el diseño de tu invitación.</p>
                     </div>
@@ -2101,6 +2101,38 @@ export default function App() {
                         </span>
                       )}
                     </div>
+
+                    {/* VISTA PREVIA DEL FONDO (LA CASILLA VISUAL) */}
+                    {datos.bgImages?.[selectedTemaId] ? (
+                      <div className="p-2 border border-indigo-150 rounded-xl bg-white flex items-center gap-3 animate-fadeIn">
+                        <div className="w-16 h-12 rounded-lg overflow-hidden border border-indigo-200 shadow-xs shrink-0 bg-slate-50">
+                          <img 
+                            src={datos.bgImages[selectedTemaId]} 
+                            alt="Vista previa del fondo" 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-[11px] font-bold text-slate-800 truncate">Fondo Personalizado Activo</span>
+                          <span className="block text-[9px] font-mono text-slate-400 truncate leading-normal">
+                            {datos.bgImages[selectedTemaId]}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 border border-slate-150 rounded-xl bg-slate-55/50 flex items-center gap-3">
+                        <div className="w-16 h-12 rounded-lg border border-slate-200 bg-white shadow-xs shrink-0 flex items-center justify-center text-sm">
+                          🎨
+                        </div>
+                        <div className="flex-1">
+                          <span className="block text-[11px] font-bold text-slate-500 leading-normal">Fondo por defecto del tema</span>
+                          <span className="block text-[9px] text-slate-400 leading-normal mt-0.5">
+                            Se utilizará la elegante textura o gradiente nativo de "{temaActual.nombre}".
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-2 pt-1">
                       <label className="flex flex-col items-center justify-center p-3 border border-dashed border-indigo-200 rounded-lg bg-white hover:bg-indigo-50/30 transition cursor-pointer text-center group">
