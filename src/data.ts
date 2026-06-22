@@ -44,7 +44,7 @@ export const paquetes: Record<"basico" | "premium" | "deluxe", PaqueteConfig> = 
   deluxe: {
     nombre: "Deluxe",
     precio: "$1,199 MXN",
-    maxFotos: 12,
+    maxFotos: 14,
     secciones: [
       "apertura",
       "portada",
@@ -768,6 +768,7 @@ export const datosDefault: Record<"basico" | "premium" | "deluxe", InvitacionDat
     datosBancarios: "Banco: BBVA\nBeneficiaria: Sophia Valeria Gómez\nCLABE: 0121 8001 2345 6789 01\nConcepto: Regalo Sophia XV",
     fotos: [], // Se llenan con fotos ficticias según el tema si está vacío
     hashtag: "#SophiaValeriaXV",
+    mostrarCajasSecciones: true,
     whatsappConfirmacion: "525512345678",
     cancion: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     linkPersonalizado: "sophia-gomez-xv",
@@ -816,6 +817,7 @@ export const datosDefault: Record<"basico" | "premium" | "deluxe", InvitacionDat
     datosBancarios: "Banco: Santander\nCLABE: 0141 8000 9876 5432 10\nBeneficiario: Emma Elizabeth Soto\n¡Lluvia de sobres en la entrada también es bienvenida!",
     fotos: [],
     hashtag: "#EmmaXVVuela",
+    mostrarCajasSecciones: true,
     whatsappConfirmacion: "525598765432",
     cancion: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
     linkPersonalizado: "emma-soto-15",
@@ -863,6 +865,7 @@ export const datosDefault: Record<"basico" | "premium" | "deluxe", InvitacionDat
     mesaRegalos: "Mesa Digital de Regalos (Efectivo) Walmart y Liverpool No. 876115",
     datosBancarios: "Banco: Banorte\nCLABE: 0721 8000 1234 5678 99\nBeneficiaria: Luna Isabella Montes",
     hashtag: "#MilMilagrosLunaXV",
+    mostrarCajasSecciones: true,
     fotos: [],
     whatsappConfirmacion: "525544332211",
     cancion: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",

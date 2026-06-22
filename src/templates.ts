@@ -354,12 +354,27 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
 
     ${datos.bgImages && datos.bgImages[tema.id] ? `
     /* Imagen de fondo cargada para este tema por separado */
+    html, body {
+      background: transparent !important;
+    }
     .theme-container {
       background-image: url('${datos.bgImages[tema.id]}') !important;
       background-size: cover !important;
       background-position: center !important;
       background-repeat: no-repeat !important;
       background-attachment: fixed !important;
+    }
+    /* Capa de fondo fija de respaldo para cobertura total garantizada en smartphones */
+    .theme-container::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url('${datos.bgImages[tema.id]}') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      z-index: -1;
+      pointer-events: none;
     }
     /* Hacer el fondo de apertura, portada y cierre transparentes para que luzca la imagen global */
     #pantalla-apertura, [data-section="portada"], footer[data-section="cierre"] {
@@ -391,6 +406,23 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       -webkit-backdrop-filter: blur(10px) !important;
       border: 1px solid ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(255,255,255,0.15)" : "rgba(255, 255, 255, 0.5)"} !important;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+    }
+    ` : ""}
+
+    /* Ocultar/Apagar cajas del fondo de los textos de las secciones si el cliente lo prefiere */
+    ${datos.mostrarCajasSecciones === false ? `
+    .theme-container .bg-white.rounded-3xl, 
+    .theme-container .gold-card,
+    .theme-container [data-section] > .bg-white,
+    .theme-container [data-section] > .rounded-3xl,
+    .theme-container .bg-white\\/45,
+    .theme-container [data-section="cuenta"] > div {
+      background-color: transparent !important;
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: none !important;
+      box-shadow: none !important;
     }
     ` : ""}
 
@@ -475,18 +507,20 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
         </div>
         
         <!-- Foto Principal de Portada si el usuario tiene fotos o una ilustración por defecto -->
-        ${fotosFiltradas.length > 0 ? `
-        <div class="relative w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-white shadow-xl mb-4">
-          <img src="${fotosFiltradas[0]}" alt="${datos.nombre}" class="w-full h-full object-cover">
-        </div>
-        ` : `
-        <div class="w-56 h-56 mx-auto rounded-full bg-[${tema.colors.light}] border-2 border-[${tema.colors.border}] flex items-center justify-center mb-6 shadow-inner animate-float">
-          <div class="text-center p-4">
-            <span class="text-6xl text-accent/80 block mb-2">${tema.decorativeEmoji}</span>
-            <span class="font-serif text-[10px] uppercase tracking-widest text-accent text-xs">Mis XV Años</span>
+        ${datos.mostrarFotoPortada !== false ? `
+          ${(datos.fotoPortada && datos.fotoPortada.trim() !== "") || fotosFiltradas.length > 0 ? `
+          <div class="relative w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-white shadow-xl mb-4">
+            <img src="${(datos.fotoPortada && datos.fotoPortada.trim() !== "") ? datos.fotoPortada.trim() : fotosFiltradas[0]}" alt="${datos.nombre}" class="w-full h-full object-cover">
           </div>
-        </div>
-        `}
+          ` : `
+          <div class="w-56 h-56 mx-auto rounded-full bg-[${tema.colors.light}] border-2 border-[${tema.colors.border}] flex items-center justify-center mb-6 shadow-inner animate-float">
+            <div class="text-center p-4">
+              <span class="text-6xl text-accent/80 block mb-2">${tema.decorativeEmoji}</span>
+              <span class="font-serif text-[10px] uppercase tracking-widest text-accent text-xs">Mis XV Años</span>
+            </div>
+          </div>
+          `}
+        ` : ''}
       </div>
 
       <!-- Fecha y llamada a scroll -->

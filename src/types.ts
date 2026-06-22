@@ -28,6 +28,9 @@ export interface InvitacionDatos {
   mesaRegalos: string;
   datosBancarios: string;
   fotos: string[];
+  fotoPortada?: string;
+  mostrarFotoPortada?: boolean;
+  mostrarCajasSecciones?: boolean;
   hashtag: string;
   whatsappConfirmacion: string;
   cancion: string;

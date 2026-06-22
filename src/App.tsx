@@ -117,6 +117,32 @@ export default function App() {
   // Estado principal de los datos de la invitación
   const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
 
+  // Estado de carga para Cloudinary
+  const [subiendoCloudinary, setSubiendoCloudinary] = useState<boolean>(false);
+
+  // Función para subir archivos a Cloudinary con los datos provistos
+  const subirACloudinary = async (file: File): Promise<string> => {
+    const cloudName = "dswrrm5u1";
+    const uploadPreset = "invitaciones-xv";
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      throw new Error(errJson?.error?.message || "Ocurrió un error al cargar la imagen.");
+    }
+
+    const resData = await response.json();
+    return resData.secure_url;
+  };
+
   // Estado del tema seleccionado
   const [selectedTemaId, setSelectedTemaId] = useState<string>(initialTemaId);
 
@@ -125,60 +151,30 @@ export default function App() {
   const [selectedCatalogTemaId, setSelectedCatalogTemaId] = useState<string | null>(initialCatalogTemaId);
 
   // Manejo de carga de imágenes de fondo por tema por separado
-  const handleBgImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBgImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      alert("La imagen es demasiado grande. Elige una menor a 10MB con una resolución óptima.");
-      return;
+    setSubiendoCloudinary(true);
+    try {
+      const url = await subirACloudinary(file);
+      setDatos(prev => {
+        const currentBgImages = prev.bgImages || {};
+        return {
+          ...prev,
+          bgImages: {
+            ...currentBgImages,
+            [selectedTemaId]: url
+          }
+        };
+      });
+      alert(`¡Imagen de fondo cargada exitosamente a Cloudinary para "${temaActual.nombre}"! 🌐🌸`);
+    } catch (err: any) {
+      alert("Error al subir fondo del tema: " + err.message);
+    } finally {
+      setSubiendoCloudinary(false);
+      e.target.value = "";
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 640;
-        const MAX_HEIGHT = 960;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.55);
-          
-          setDatos(prev => {
-            const currentBgImages = prev.bgImages || {};
-            return {
-              ...prev,
-              bgImages: {
-                ...currentBgImages,
-                [selectedTemaId]: compressedBase64
-              }
-            };
-          });
-          alert(`¡Imagen de fondo cargada y optimizada con éxito para "${temaActual.nombre}"! 🌸`);
-        }
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleBgImageUrlChange = (url: string) => {
@@ -434,8 +430,8 @@ export default function App() {
     window.open(waUrl, "_blank");
   };
 
-  // Procesar archivo cargado localmente (Convertir a Base64)
-  const handleLeerFotoLocal = (e: ChangeEvent<HTMLInputElement>) => {
+  // Procesar archivo cargado localmente (Subir a Cloudinary)
+  const handleLeerFotoLocal = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -444,23 +440,46 @@ export default function App() {
 
     if (fotosActuales.length >= maxFotosPermitidas) {
       alert(`Límite alcanzado: El paquete ${datos.paquete.toUpperCase()} solo permite un máximo de ${maxFotosPermitidas} fotos.`);
+      e.target.value = "";
       return;
     }
 
     const file = files[0];
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const base64Str = event.target.result as string;
-        setDatos(prev => ({
-          ...prev,
-          fotos: [...(prev.fotos || []), base64Str]
-        }));
-      }
-    };
-    reader.readAsDataURL(file);
-    // Reiniciar input
-    e.target.value = "";
+    setSubiendoCloudinary(true);
+    try {
+      const url = await subirACloudinary(file);
+      setDatos(prev => ({
+        ...prev,
+        fotos: [...(prev.fotos || []), url]
+      }));
+      alert("¡Imagen cargada exitosamente a Cloudinary! 🌐🌸");
+    } catch (err: any) {
+      alert("Error al subir a Cloudinary: " + err.message);
+    } finally {
+      setSubiendoCloudinary(false);
+      e.target.value = "";
+    }
+  };
+
+  // Procesar carga de foto de portada principal localmente a Cloudinary
+  const handleCargarFotoPortadaLocal = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    setSubiendoCloudinary(true);
+    try {
+      const url = await subirACloudinary(file);
+      setDatos(prev => ({
+        ...prev,
+        fotoPortada: url
+      }));
+      alert("¡Foto de portada cargada exitosamente a Cloudinary! 🌐🌸");
+    } catch (err: any) {
+      alert("Error al subir foto de portada: " + err.message);
+    } finally {
+      setSubiendoCloudinary(false);
+      e.target.value = "";
+    }
   };
 
   // Agregar una URL de foto pegada
@@ -482,12 +501,54 @@ export default function App() {
     setNuevoFotoUrl("");
   };
 
-  // Eliminar foto individual
+  // Procesar carga de foto de galería en un casillero específico a Cloudinary
+  const handleCargarFotoGaleriaIndex = async (index: number, file: File) => {
+    if (!file) return;
+    setSubiendoCloudinary(true);
+    try {
+      const url = await subirACloudinary(file);
+      setDatos(prev => {
+        const nuevasFotos = [...(prev.fotos || [])];
+        nuevasFotos[index] = url;
+        return {
+          ...prev,
+          fotos: nuevasFotos
+        };
+      });
+      alert(`¡Imagen para el casillero #${index + 1} cargada exitosamente a Cloudinary! 🌐🌸`);
+    } catch (err: any) {
+      alert("Error al cargar imagen en galería: " + err.message);
+    } finally {
+      setSubiendoCloudinary(false);
+    }
+  };
+
+  // Reemplazar o establecer el link de la foto de la galería en un casillero específico
+  const handleEstablecerFotoUrlIndex = (index: number, url: string) => {
+    setDatos(prev => {
+      const nuevasFotos = [...(prev.fotos || [])];
+      nuevasFotos[index] = url.trim();
+      return {
+        ...prev,
+        fotos: nuevasFotos
+      };
+    });
+  };
+
+  // Eliminar foto individual de galería por índice sin desordenar necesariamente el resto
   const handleEliminarFoto = (index: number) => {
-    setDatos(prev => ({
-      ...prev,
-      fotos: (prev.fotos || []).filter((_, i) => i !== index)
-    }));
+    setDatos(prev => {
+      const nuevasFotos = [...(prev.fotos || [])];
+      // Eliminamos el elemento de esa posición (splice) o la limpiamos.
+      // Limpiarla (dejarla vacía) o removerla de la lista. Removerla de la lista compactará la galería.
+      // Hagamos la eliminación compactando, que es el comportamiento esperado usual de una galería,
+      // pero actualizando correctamente.
+      const filtradas = nuevasFotos.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        fotos: filtradas
+      };
+    });
   };
 
   // Itinerario: Agregar evento
@@ -1100,81 +1161,36 @@ export default function App() {
                       );
                     })}
                   </div>
+                </div>
 
-                  {/* CARGADOR DE FONDO POR TEMA */}
-                  <div className="mt-4 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/70 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-indigo-600 rounded-lg text-white animate-pulse">
-                        <Upload className="w-3.5 h-3.5" />
+                {/* SOPORTE DE CAJON DE TEXTO / TARJETAS DETALLADAS */}
+                <div className="border-t border-slate-200 pt-6">
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse"></span>
+                    Estilo de Contenedores de Sección
+                  </h3>
+                  <div className="p-4 bg-rose-50/20 border border-pink-100 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="pr-3">
+                        <span className="block text-xs font-bold text-slate-800">
+                          Cajas de fondo en textos de secciones
+                        </span>
+                        <span className="block text-[11px] text-slate-500 leading-normal mt-0.5">
+                          Apaga o enciende los cajones/tarjetas blancas y translúcidas donde se presentan los textos principales (iglesia, salón, mesa de regalos, etc.). Si los apagas, los textos se mostrarán directamente sobre el fondo general.
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Fondo para {temaActual.nombre}</h4>
-                        <p className="text-[11px] text-slate-500">Carga un fondo único para este tema por separado.</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {/* Indicador de estado */}
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-600 font-medium font-sans">Estado del fondo:</span>
-                        {datos.bgImages?.[selectedTemaId] ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></span>
-                            Personalizado ({datos.bgImages[selectedTemaId].startsWith("data:") ? "Archivo" : "URL"})
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-medium font-sans">
-                            Predeterminado (Gradiente del Tema)
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                        {/* Subir archivo */}
-                        <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-indigo-200 rounded-xl bg-white hover:bg-indigo-50/20 active:scale-[0.98] transition-all cursor-pointer text-center group shadow-xs">
-                          <Upload className="w-5 h-5 text-indigo-500 group-hover:text-indigo-600 mb-1" />
-                          <span className="text-xs font-bold text-indigo-700 font-sans">Subir Archivo 📁</span>
-                          <span className="text-[9px] text-slate-400 mt-0.5 font-sans">Automáticamente optimizado</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleBgImageUpload}
-                            className="hidden"
-                          />
-                        </label>
-
-                        {/* Restaurar */}
-                        <button
-                          type="button"
-                          onClick={handleClearBgImage}
-                          disabled={!datos.bgImages?.[selectedTemaId]}
-                          className={`flex flex-col items-center justify-center p-3 border rounded-xl font-sans transition-all active:scale-[0.98] text-center shadow-xs ${
-                            datos.bgImages?.[selectedTemaId]
-                              ? "bg-white border-rose-205 hover:bg-rose-50/50 cursor-pointer text-rose-700"
-                              : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
-                          }`}
-                        >
-                          <Trash2 className="w-5 h-5 mb-1" />
-                          <span className="text-xs font-bold font-sans">Restablecer Fondo</span>
-                          <span className="text-[9px] opacity-75 mt-0.5 font-sans font-medium">Volver a los valores por defecto</span>
-                        </button>
-                      </div>
-
-                      {/* Pegar URL */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-705 mb-1 font-sans">O Pegar Enlace Directo de Imagen 🔗</label>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input
-                          type="text"
-                          value={datos.bgImages?.[selectedTemaId] && !datos.bgImages[selectedTemaId].startsWith("data:") ? datos.bgImages[selectedTemaId] : ""}
-                          onChange={(e) => handleBgImageUrlChange(e.target.value)}
-                          placeholder="Ej. https://images.unsplash.com/photo-..."
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-indigo-600 outline-none font-sans"
-                          title="Puedes pegar un link público de Unsplash, Pinterest u otro hosting de fotos."
+                          type="checkbox"
+                          checked={datos.mostrarCajasSecciones !== false}
+                          onChange={(e) => setDatos({ ...datos, mostrarCajasSecciones: e.target.checked })}
+                          className="sr-only peer"
                         />
-                        <p className="text-[10px] text-slate-400 mt-1 font-sans">
-                          Utilizar un enlace directo a Internet es idóneo para evitar sobrecargar la capacidad del link codificado.
-                        </p>
-                      </div>
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-550"></div>
+                        <span className="ml-2 text-xs font-bold text-pink-700 w-12 text-right uppercase">
+                          {datos.mostrarCajasSecciones !== false ? "ON" : "OFF"}
+                        </span>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -1419,6 +1435,85 @@ export default function App() {
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm focus:border-indigo-600 outline-none font-mono"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">Sugerencia: Puedes colocar links de canciones libres de derechos alojadas públicamente o dejarse en blanco.</p>
+                </div>
+
+                {/* CONFIGURACIÓN DE FOTO DE PORTADA */}
+                <div className="bg-gradient-to-r from-pink-50 to-indigo-50/50 p-4 rounded-xl border border-pink-100 space-y-4 shadow-sm mt-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs uppercase font-extrabold text-pink-600 flex items-center gap-1.5">
+                      <span className="p-1 bg-pink-100 border border-pink-200 rounded-full text-pink-600">📷</span>
+                      Foto de Portada Principal
+                    </h4>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={datos.mostrarFotoPortada !== false}
+                        onChange={(e) => setDatos({ ...datos, mostrarFotoPortada: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
+                      <span className="ml-2 text-[11px] font-semibold text-slate-600 whitespace-nowrap">
+                        {datos.mostrarFotoPortada !== false ? "Habilitada" : "Apagada"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {datos.mostrarFotoPortada !== false && (
+                    <div className="space-y-4 animate-fadeIn">
+                      {/* Subir archivo local */}
+                      <div className="space-y-2">
+                        <span className="block text-xs font-semibold text-slate-650">Subir nueva Foto de Portada (Directo a Cloudinary)</span>
+                        <label className="flex flex-col items-center justify-center p-3 border border-dashed border-pink-200 bg-white rounded-lg hover:bg-pink-50/50 cursor-pointer transition">
+                          <Upload className="w-5 h-5 text-pink-600 mb-1" />
+                          <span className="text-xs text-rose-700 font-bold">
+                            {subiendoCloudinary ? "Subiendo archivo..." : "Seleccionar Archivo Local"}
+                          </span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleCargarFotoPortadaLocal} 
+                            disabled={subiendoCloudinary}
+                            className="hidden" 
+                          />
+                        </label>
+                      </div>
+
+                      {/* URL o visualización */}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-650 mb-1">
+                          Enlace/URL de Foto para Portada (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          value={datos.fotoPortada || ""}
+                          onChange={(e) => setDatos({ ...datos, fotoPortada: e.target.value })}
+                          placeholder="Ej. https://images.unsplash.com/photo-X..."
+                          className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-sm focus:border-pink-500 outline-none font-mono"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          Pega un link directo de imagen (.jpg, .png) o utiliza el botón de arriba de Cloudinary. Si se deja vacío se usará la primera foto de tu galería o una ilustración del tema.
+                        </p>
+                      </div>
+
+                      {/* Mini Vista previa de la portada actual */}
+                      {datos.fotoPortada && (
+                        <div className="pt-2">
+                          <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Vista Previa Portada:</span>
+                          <div className="relative w-40 h-40 rounded-full overflow-hidden border-2 border-pink-300 shadow-md">
+                            <img src={datos.fotoPortada} alt="Miniatura Portada" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setDatos({ ...datos, fotoPortada: "" })}
+                              className="absolute top-1 right-1 p-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full transition text-[10px] shadow"
+                              title="Remover imagen"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1804,85 +1899,245 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 7: FOTOS DEL ÁLBUM / GALERÍA */}
+            {/* TAB 7: GESTIÓN DE IMÁGENES (FONDO, PORTADA Y GALERÍA) */}
             {panelPestana === "fotos" && (
               <div className="space-y-6 animate-fadeIn">
-                <div>
-                  <h3 className="text-sm font-semibold text-indigo-600 mb-3">Galería de Fotos</h3>
-                  <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-                    Las fotos se organizan según el cupo permitido por el paquete. Puedes subir fotos locales (se insertarán embebidas en formato Base64) o pegar enlaces públicos.
-                  </p>
-
-                  {/* Fotos actuales */}
-                  <div className="mb-6 space-y-2">
-                    <span className="text-[11px] uppercase font-bold text-slate-500 block mb-2">
-                      Fotos agregadas ({datos.fotos?.length || 0} de {paquetes[datos.paquete].maxFotos} permitidas):
-                    </span>
-
-                    {datos.fotos && datos.fotos.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {datos.fotos.map((foto, index) => (
-                          <div key={index} className="relative rounded-lg overflow-hidden border border-slate-200 bg-slate-100 aspect-3/4 group">
-                            <img src={foto} alt="Thumbnail de Galería" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition duration-150 flex items-center justify-center">
-                              <button 
-                                onClick={() => handleEliminarFoto(index)}
-                                className="p-1.5 bg-rose-600 font-bold hover:bg-rose-700 text-white rounded-full transition overflow-hidden text-xs cursor-pointer"
-                                title="Eliminar de mi galería"
-                              >
-                                <Trash2 className="w-4 h-4 text-white" />
-                              </button>
-                            </div>
-                            <span className="absolute bottom-1 left-1 bg-black/75 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold text-white uppercase">
-                              #{index + 1}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-xl border border-dashed border-slate-200 text-center text-slate-500 text-xs">
-                        ⚠️ No has subido fotos personalizadas. Se usarán imágenes ficticias súper elegantes diseñadas especialmente para el tema seleccionado.
-                      </div>
-                    )}
+                
+                {/* PARTE 1: FONDO DE LA INVITACIÓN */}
+                <div className="p-4 bg-indigo-50/40 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🖼️</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">
+                        Fondo de la Invitación
+                      </h4>
+                      <p className="text-[10px] text-slate-500">Sube una imagen de fondo personalizada para el diseño de tu invitación.</p>
+                    </div>
                   </div>
 
-                  {/* CARGAR FOTO / ENLACES */}
-                  <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-500 block mb-2 font-semibold">Método A: Subir imagen local (Base64 embebido)</span>
-                      <label className="flex flex-col items-center justify-center p-3 border border-dashed border-slate-300 bg-white rounded-lg hover:bg-slate-50 cursor-pointer transition">
-                        <Upload className="w-5 h-5 text-indigo-600 mb-1" />
-                        <span className="text-xs text-slate-650 font-medium">Seleccionar Imagen Solicitada</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleLeerFotoLocal} 
-                          className="hidden" 
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-600 font-semibold text-[11px]">Estado actual del fondo:</span>
+                      {datos.bgImages?.[selectedTemaId] ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce"></span>
+                          Personalizado ✨
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-slate-250 text-slate-750 text-[10px] font-semibold">
+                          Fondo del Tema
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <label className="flex flex-col items-center justify-center p-3 border border-dashed border-indigo-200 rounded-lg bg-white hover:bg-indigo-50/30 transition cursor-pointer text-center group">
+                        <Upload className={`w-4 h-4 text-indigo-500 mb-1 group-hover:text-indigo-600 ${subiendoCloudinary ? 'animate-bounce' : ''}`} />
+                        <span className="text-[11px] font-bold text-indigo-700">
+                          {subiendoCloudinary ? "Subiendo..." : "Subir Fondo (Cloudinary)"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleBgImageUpload}
+                          className="hidden"
+                          disabled={subiendoCloudinary}
                         />
                       </label>
+
+                      <button
+                        type="button"
+                        onClick={handleClearBgImage}
+                        disabled={!datos.bgImages?.[selectedTemaId]}
+                        className={`flex flex-col items-center justify-center p-3 border rounded-lg transition text-center ${
+                          datos.bgImages?.[selectedTemaId]
+                            ? "bg-white border-rose-200 hover:bg-rose-50 text-rose-700 cursor-pointer"
+                            : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                        }`}
+                      >
+                        <Trash2 className="w-4 h-4 mb-1" />
+                        <span className="text-[11px] font-bold">Restablecer Fondo</span>
+                      </button>
                     </div>
 
-                    <div className="border-t border-slate-200 pt-3">
-                      <span className="text-[10px] uppercase font-bold text-slate-500 block mb-1.5 font-semibold">Método B: Pegar Enlace Público</span>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={nuevoFotoUrl}
-                          onChange={(e) => setNuevoFotoUrl(e.target.value)}
-                          placeholder="https://images.unsplash.com/... o link de Cloudinary"
-                          className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs outline-none"
-                        />
-                        <button
-                          onClick={handleAgregarFotoUrl}
-                          className="px-4.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition cursor-pointer"
-                        >
-                          Añadir URL
-                        </button>
-                      </div>
+                    <div className="space-y-1">
+                      <span className="block text-[10px] font-semibold text-slate-500">O ingresar link directo de fondo:</span>
+                      <input
+                        type="text"
+                        value={datos.bgImages?.[selectedTemaId] && !datos.bgImages[selectedTemaId].startsWith("data:") ? datos.bgImages[selectedTemaId] : ""}
+                        onChange={(e) => handleBgImageUrlChange(e.target.value)}
+                        placeholder="Pegar link de imagen de fondo..."
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-indigo-500 outline-none font-mono text-[11px]"
+                      />
                     </div>
                   </div>
-
                 </div>
+
+                {/* PARTE 2: FOTO DE PORTADA O DE LA QUINCEAÑERA */}
+                <div className="p-4 bg-pink-50/40 rounded-xl border border-pink-100 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👑</span>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest">Foto de Portada Principal</h4>
+                        <p className="text-[10px] text-slate-500">La foto circular que se destaca al inicio.</p>
+                      </div>
+                    </div>
+                    
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={datos.mostrarFotoPortada !== false}
+                        onChange={(e) => setDatos({ ...datos, mostrarFotoPortada: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
+                      <span className="ml-2 text-[11px] font-bold text-slate-700">
+                        {datos.mostrarFotoPortada !== false ? "Habilitada" : "Apagada"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {datos.mostrarFotoPortada !== false && (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex flex-col items-center justify-center p-3 border border-dashed border-pink-200 bg-white rounded-lg hover:bg-pink-50/40 cursor-pointer text-center group">
+                          <Upload className={`w-4 h-4 text-pink-500 mb-1 group-hover:text-pink-600 ${subiendoCloudinary ? 'animate-bounce' : ''}`} />
+                          <span className="text-[11px] font-bold text-pink-700">Subir Portada (Cloudinary)</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleCargarFotoPortadaLocal} 
+                            disabled={subiendoCloudinary}
+                            className="hidden" 
+                          />
+                        </label>
+
+                        <div className="flex flex-col justify-center space-y-1">
+                          <span className="text-[10px] font-bold text-slate-500">O pegar link de foto:</span>
+                          <input
+                            type="text"
+                            value={datos.fotoPortada || ""}
+                            onChange={(e) => setDatos({ ...datos, fotoPortada: e.target.value })}
+                            placeholder="Ej: https://cloudinary..."
+                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-pink-500 outline-none font-mono text-[11px]"
+                          />
+                        </div>
+                      </div>
+
+                      {datos.fotoPortada && (
+                        <div className="flex items-center gap-3 pt-2 border-t border-pink-100/70">
+                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-pink-300 shadow-sm relative shrink-0">
+                            <img src={datos.fotoPortada} alt="Portada actual" className="w-full h-full object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-mono text-slate-500 truncate block">{datos.fotoPortada}</span>
+                            <button
+                              type="button"
+                              onClick={() => setDatos({ ...datos, fotoPortada: "" })}
+                              className="text-[10px] text-rose-600 font-bold hover:underline"
+                            >
+                              Eliminar foto de portada
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* PARTE 3: CASILLAS DE LA GALERÍA DE FOTOS */}
+                <div className="space-y-4 pt-1">
+                  <div className="border-t border-slate-200 pt-4 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-widest">Galería de Fotos del Álbum</h4>
+                      <p className="text-[10px] text-slate-500 leading-normal">
+                        Paquete <span className="font-bold text-indigo-700 uppercase">{paquetes[datos.paquete].nombre}</span> con derecho a un máximo de <span className="font-bold text-indigo-700">{paquetes[datos.paquete].maxFotos} fotos de galería</span>.
+                      </p>
+                    </div>
+                    <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold rounded-lg uppercase">
+                      Límite: {datos.fotos?.length || 0} / {paquetes[datos.paquete].maxFotos}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {Array.from({ length: paquetes[datos.paquete].maxFotos }).map((_, index) => {
+                      const fotoActual = datos.fotos?.[index];
+                      return (
+                        <div key={index} className="relative rounded-xl border border-slate-200 bg-slate-50 aspect-3/4 flex flex-col justify-between overflow-hidden shadow-xs group">
+                          {/* Número de Casilla */}
+                          <div className="absolute top-2 left-2 z-10 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-mono font-black text-rose-300 uppercase tracking-widest">
+                            FOTO #{index + 1}
+                          </div>
+
+                          {fotoActual ? (
+                            <>
+                              <img src={fotoActual} alt={`Foto ${index + 1}`} className="w-full h-full object-cover" />
+                              
+                              {/* Overlay de acciones */}
+                              <div className="absolute inset-0 bg-slate-950/85 opacity-0 group-hover:opacity-100 transition duration-150 flex flex-col justify-center items-center p-2.5 gap-2 text-center text-white z-10">
+                                <span className="text-[9px] uppercase font-bold text-slate-300">Espacio #{index + 1} Habilitado</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEliminarFoto(index)}
+                                  className="w-full py-1.5 bg-rose-600 hover:bg-rose-700 font-bold text-[10px] uppercase rounded-md text-white transition flex items-center justify-center gap-1 cursor-pointer"
+                                  title="Remover de este casillero"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Remover
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center p-3 text-center space-y-2 animate-fadeIn">
+                              <span className="text-xl text-slate-300">📸</span>
+                              <span className="text-[10px] font-semibold text-slate-400">Casilla vacía</span>
+                              
+                              <div className="w-full space-y-1.5 pt-1">
+                                {/* Botón subir */}
+                                <label className="block w-full py-1 bg-indigo-50 hover:bg-indigo-100 text-[10px] font-bold text-indigo-700/90 border border-indigo-200 rounded-md cursor-pointer transition">
+                                  {subiendoCloudinary ? "Subiendo..." : "Subir (Cloudinary)"}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleCargarFotoGaleriaIndex(index, file);
+                                    }}
+                                    disabled={subiendoCloudinary}
+                                    className="hidden"
+                                  />
+                                </label>
+
+                                {/* Pegar Link de foto */}
+                                <input
+                                  type="text"
+                                  placeholder="Pegar link de imagen..."
+                                  className="w-full px-2 py-0.5 text-[9px] text-slate-700 bg-white border border-slate-200 rounded outline-none focus:border-indigo-400 text-center font-mono"
+                                  onBlur={(e) => {
+                                    if (e.target.value.trim()) {
+                                      handleEstablecerFotoUrlIndex(index, e.target.value.trim());
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                                      handleEstablecerFotoUrlIndex(index, (e.target as HTMLInputElement).value.trim());
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-[10px] text-slate-500 leading-relaxed pt-1.5 border-t border-slate-100">
+                    💡 <span className="font-bold">Consejo:</span> El sistema adapta dinámicamente tu galería de fotos interactiva. Al subir tus fotos a cada casilla se guardan y cargan de forma inmediata en las nubes de Cloudinary para que tu invitación cargue a máxima velocidad.
+                  </p>
+                </div>
+
               </div>
             )}
 
