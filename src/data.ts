@@ -511,7 +511,7 @@ export const temas: TemaConfig[] = [
   },
   {
     id: "coquette-pink",
-    nombre: "XV Coquette Rose 🎀 (Glam & Sparkle)",
+    nombre: "XV Coquette Listones Rose 🎀 (Glam & Sparkle)",
     fontHeading: "Playfair Display",
     fontBody: "Inter",
     fontCursive: "Parisienne",
@@ -577,15 +577,19 @@ export const temas: TemaConfig[] = [
         animation: coquette-sparkle-pulse 2s infinite ease-in-out 1s;
       }
 
-      /* Moño superior decorativo de la portada */
+      /* Listón de raso rosa con moño elegante y ondas colgantes de la portada */
       [data-section="portada"] .font-serif.text-gray-500.mb-1::before {
-        content: "🎀" !important;
+        content: "" !important;
         display: block !important;
-        font-size: 38px !important;
-        margin-top: -12px !important;
-        margin-bottom: 8px !important;
-        filter: drop-shadow(0 2px 5px rgba(228, 93, 140, 0.25)) !important;
-        animation: coquette-float-bow 3s ease-in-out infinite alternate !important;
+        width: 140px !important;
+        height: 140px !important;
+        margin: -45px auto 5px auto !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M45 42C45 39 55 39 55 42C55 45 45 45 45 42Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1.5'/%3E%3Cpath d='M45 42C35 34 22 38 28 48C32 55 45 45 45 42Z' fill='%23FFA6C9' stroke='%23E45D8C' stroke-width='1.5'/%3E%3Cpath d='M55 42C65 34 78 38 72 48C68 55 55 45 55 42Z' fill='%23FFA6C9' stroke='%23E45D8C' stroke-width='1.5'/%3E%3Cpath d='M46 44C43 54 35 62 38 72C41 82 48 90 46 95C42 90 35 78 33 68C31 58 41 50 46 44Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1'/%3E%3Cpath d='M54 44C57 54 65 62 62 72C59 82 52 90 54 95C58 90 65 78 67 68C69 58 59 50 54 44Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        filter: drop-shadow(0 4px 8px rgba(228, 93, 140, 0.3)) !important;
+        animation: coquette-float-bow 3.5s ease-in-out infinite alternate !important;
       }
 
       /* Cajones / Cuadros de Sección Coquette con Ondas Dobles y Listones */
@@ -611,32 +615,45 @@ export const temas: TemaConfig[] = [
         margin-bottom: 1rem !important;
       }
 
-      /* Listón 🎀 rosa superior izquierdo */
+      /* Listón elegante de raso rosa con moño y ondas superiores izquierdas */
       .gold-card::before, 
       [data-section] > .bg-white.rounded-3xl::before, 
       [data-section] > .rounded-3xl::before {
-        content: '🎀' !important;
+        content: '' !important;
         position: absolute !important;
-        top: -16px !important;
-        left: -14px !important;
-        font-size: 32px !important;
+        top: -24px !important;
+        left: -20px !important;
+        width: 65px !important;
+        height: 65px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M45 42C45 39 55 39 55 42C55 45 45 45 45 42Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1.5'/%3E%3Cpath d='M45 42C35 34 22 38 28 48C32 55 45 45 45 42Z' fill='%23FFA6C9' stroke='%23E45D8C' stroke-width='1.5'/%3E%3Cpath d='M55 42C65 34 78 38 72 48C68 55 55 45 55 42Z' fill='%23FFA6C9' stroke='%23E45D8C' stroke-width='1.5'/%3E%3Cpath d='M46 44C43 54 35 62 38 72C41 82 48 90 46 95C42 90 35 78 33 68C31 58 41 50 46 44Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1'/%3E%3Cpath d='M54 44C57 54 65 62 62 72C59 82 52 90 54 95C58 90 65 78 67 68C69 58 59 50 54 44Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
         z-index: 20 !important;
-        filter: drop-shadow(0 3px 6px rgba(228, 93, 140, 0.35)) !important;
-        animation: coquette-float-bow 2.5s ease-in-out infinite alternate !important;
+        filter: drop-shadow(0 4px 8px rgba(228, 93, 140, 0.3)) !important;
+        animation: coquette-float-bow 2.8s ease-in-out infinite alternate !important;
       }
       
-      /* Listón 🎀 rosa inferior derecho */
+      /* Listón elegante de raso rosa con moño y ondas inferiores derechas */
       .gold-card::after, 
       [data-section] > .bg-white.rounded-3xl::after, 
       [data-section] > .rounded-3xl::after {
-        content: '🎀' !important;
+        content: '' !important;
         position: absolute !important;
-        bottom: -16px !important;
-        right: -14px !important;
-        font-size: 32px !important;
+        bottom: -24px !important;
+        right: -20px !important;
+        width: 65px !important;
+        height: 65px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M45 42C45 39 55 39 55 42C55 45 45 45 45 42Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1.5'/%3E%3Cpath d='M45 42C35 34 22 38 28 48C32 55 45 45 45 42Z' fill='%23FFA6C9' stroke='%23E45D8C' stroke-width='1.5'/%3E%3Cpath d='M55 42C65 34 78 38 72 48C68 55 55 45 55 42Z' fill='%23FFA6C9' stroke='%23E45D8C' stroke-width='1.5'/%3E%3Cpath d='M46 44C43 54 35 62 38 72C41 82 48 90 46 95C42 90 35 78 33 68C31 58 41 50 46 44Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1'/%3E%3Cpath d='M54 44C57 54 65 62 62 72C59 82 52 90 54 95C58 90 65 78 67 68C69 58 59 50 54 44Z' fill='%23E45D8C' stroke='%23FCB5C9' stroke-width='1'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
         z-index: 20 !important;
-        filter: drop-shadow(0 3px 6px rgba(228, 93, 140, 0.35)) !important;
-        animation: coquette-float-bow-reverse 2.5s ease-in-out infinite alternate !important;
+        filter: drop-shadow(0 4px 8px rgba(228, 93, 140, 0.3)) !important;
+        animation: coquette-float-bow-reverse 2.8s ease-in-out infinite alternate !important;
+      }
+
+      /* Decorativo interior de los cajones h3 */in-out infinite alternate !important;
       }
 
       /* Decorativo interior de los cajones h3 */
