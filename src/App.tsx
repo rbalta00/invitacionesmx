@@ -258,6 +258,29 @@ export default function App() {
   // Estado principal de los datos de la invitación
   const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
 
+  // Estado para notificaciones Toast no bloqueantes (reemplazo de alert)
+  const [toast, setToast] = useState<{ mensaje: string; tipo: "success" | "error" | "info" } | null>(null);
+
+  // Estado para modal de confirmación personalizado (reemplazo de window.confirm)
+  const [confirmModal, setConfirmModal] = useState<{
+    titulo: string;
+    mensaje: string;
+    onAceptar: () => void;
+  } | null>(null);
+
+  const mostrarToast = (mensaje: string, tipo: "success" | "error" | "info" = "success") => {
+    setToast({ mensaje, tipo });
+  };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Estado de carga para Cloudinary
   const [subiendoCloudinary, setSubiendoCloudinary] = useState<boolean>(false);
 
@@ -309,9 +332,9 @@ export default function App() {
           }
         };
       });
-      alert(`¡Imagen de fondo cargada exitosamente a Cloudinary para "${temaActual.nombre}"! 🌐🌸`);
+      mostrarToast(`¡Imagen de fondo cargada exitosamente a Cloudinary para "${temaActual.nombre}"! 🌐🌸`, "success");
     } catch (err: any) {
-      alert("Error al subir fondo del tema: " + err.message);
+      mostrarToast("Error al subir fondo del tema: " + err.message, "error");
     } finally {
       setSubiendoCloudinary(false);
       e.target.value = "";
@@ -340,7 +363,7 @@ export default function App() {
         bgImages: currentBgImages
       };
     });
-    alert(`Se ha de restablecido el fondo por defecto del tema "${temaActual.nombre}".`);
+    mostrarToast(`Se ha restablecido el fondo por defecto del tema "${temaActual.nombre}".`, "info");
   };
 
   // Estado para la pestaña de configuración activa en el panel lateral
@@ -403,48 +426,54 @@ export default function App() {
 
   // Aplicar plantilla completa predefinida de un paquete
   const handleCambiarPaquete = (paqKey: "basico" | "premium" | "deluxe") => {
-    const confirmacion = window.confirm(
-      `Al cambiar al paquete "${paqKey.toUpperCase()}", cargaremos los datos de prueba idóneos para ese nivel de secciones. ¿Deseas proceder? Se reemplazarán tus cambios actuales.`
-    );
-    if (confirmacion) {
-      const datosBase = datosDefault[paqKey];
-      setDatos({
-        ...datosBase,
-        paquete: paqKey
-      });
-      setSelectedTemaId(datosBase.tema);
-      setPanelPestana("ajustes");
-    }
+    setConfirmModal({
+      titulo: `Cambiar al paquete "${paqKey.toUpperCase()}"`,
+      mensaje: `Al cambiar al paquete "${paqKey.toUpperCase()}", cargaremos los datos de prueba idóneos para ese nivel de secciones. Se reemplazarán tus cambios actuales. ¿Deseas proceder?`,
+      onAceptar: () => {
+        const datosBase = datosDefault[paqKey];
+        setDatos({
+          ...datosBase,
+          paquete: paqKey
+        });
+        setSelectedTemaId(datosBase.tema);
+        setPanelPestana("ajustes");
+        mostrarToast(`¡Se ha cambiado al paquete ${paqKey.toUpperCase()}! ✨`, "success");
+      }
+    });
   };
 
   // Limpiar formulario completo
   const handleLimpiarFormulario = () => {
-    const confirmacion = window.confirm("¿Estás seguro de que deseas reiniciar todos los campos del generador a su estado inicial?");
-    if (confirmacion) {
-      setDatos({
-        paquete: "basico",
-        tema: "dorado-clasico",
-        nombre: "",
-        fecha: new Date().toISOString().substring(0, 16),
-        mensajeBienvenida: "Estás invitado a compartir conmigo la alegría de mis quince años.",
-        ceremonia: { lugar: "", hora: "", direccion: "", maps: "" },
-        recepcion: { lugar: "", hora: "", direccion: "", maps: "" },
-        itinerario: [],
-        dressCode: "Formal",
-        colorSugerido: ["#D4AF37", "#FFFFFF"],
-        padres: [],
-        padrinos: [],
-        mesaRegalos: "",
-        datosBancarios: "",
-        fotos: [],
-        hashtag: "",
-        whatsappConfirmacion: "52",
-        cancion: "",
-        linkPersonalizado: "",
-        invitados: []
-      });
-      setSelectedTemaId("dorado-clasico");
-    }
+    setConfirmModal({
+      titulo: "Limpiar formulario completo",
+      mensaje: "¿Estás seguro de que deseas reiniciar todos los campos del generador a su estado inicial?",
+      onAceptar: () => {
+        setDatos({
+          paquete: "basico",
+          tema: "dorado-clasico",
+          nombre: "",
+          fecha: new Date().toISOString().substring(0, 16),
+          mensajeBienvenida: "Estás invitado a compartir conmigo la alegría de mis quince años.",
+          ceremonia: { lugar: "", hora: "", direccion: "", maps: "" },
+          recepcion: { lugar: "", hora: "", direccion: "", maps: "" },
+          itinerario: [],
+          dressCode: "Formal",
+          colorSugerido: ["#D4AF37", "#FFFFFF"],
+          padres: [],
+          padrinos: [],
+          mesaRegalos: "",
+          datosBancarios: "",
+          fotos: [],
+          hashtag: "",
+          whatsappConfirmacion: "52",
+          cancion: "",
+          linkPersonalizado: "",
+          invitados: []
+        });
+        setSelectedTemaId("dorado-clasico");
+        mostrarToast("¡El formulario ha sido reiniciado! 💮", "info");
+      }
+    });
   };
 
   // Descargar el archivo index.html standalone
@@ -471,8 +500,9 @@ export default function App() {
       .then(() => {
         setHtmlCopiado(true);
         setTimeout(() => setHtmlCopiado(false), 2000);
+        mostrarToast("¡Código HTML de la invitación copiado al portapapeles! 📄⚜️", "success");
       })
-      .catch(err => alert("Error al copiar HTML: " + err));
+      .catch(err => mostrarToast("Error al copiar HTML: " + err, "error"));
   };
 
   // Copiar objeto de datos JSON al portapapeles para guardado futuro
@@ -482,8 +512,9 @@ export default function App() {
       .then(() => {
         setDatosCopiados(true);
         setTimeout(() => setDatosCopiados(false), 2000);
+        mostrarToast("¡Esquema de datos JSON de la invitación copiado al portapapeles! 📂⚙️", "success");
       })
-      .catch(err => alert("Error al copiar datos JSON: " + err));
+      .catch(err => mostrarToast("Error al copiar datos JSON: " + err, "error"));
   };
 
   // Generar URL del catálogo de demos
@@ -580,7 +611,7 @@ export default function App() {
     const fotosActuales = [...(datos.fotos || [])];
 
     if (fotosActuales.length >= maxFotosPermitidas) {
-      alert(`Límite alcanzado: El paquete ${datos.paquete.toUpperCase()} solo permite un máximo de ${maxFotosPermitidas} fotos.`);
+      mostrarToast(`Límite alcanzado: El paquete ${datos.paquete.toUpperCase()} solo permite un máximo de ${maxFotosPermitidas} fotos.`, "error");
       e.target.value = "";
       return;
     }
@@ -593,9 +624,9 @@ export default function App() {
         ...prev,
         fotos: [...(prev.fotos || []), url]
       }));
-      alert("¡Imagen cargada exitosamente a Cloudinary! 🌐🌸");
+      mostrarToast("¡Imagen cargada exitosamente a Cloudinary! 🌐🌸", "success");
     } catch (err: any) {
-      alert("Error al subir a Cloudinary: " + err.message);
+      mostrarToast("Error al subir a Cloudinary: " + err.message, "error");
     } finally {
       setSubiendoCloudinary(false);
       e.target.value = "";
@@ -614,9 +645,9 @@ export default function App() {
         ...prev,
         fotoPortada: url
       }));
-      alert("¡Foto de portada cargada exitosamente a Cloudinary! 🌐🌸");
+      mostrarToast("¡Foto de portada cargada exitosamente a Cloudinary! 🌐🌸", "success");
     } catch (err: any) {
-      alert("Error al subir foto de portada: " + err.message);
+      mostrarToast("Error al subir foto de portada: " + err.message, "error");
     } finally {
       setSubiendoCloudinary(false);
       e.target.value = "";
@@ -631,7 +662,7 @@ export default function App() {
     const fotosActuales = [...(datos.fotos || [])];
 
     if (fotosActuales.length >= maxFotosPermitidas) {
-      alert(`Límite alcanzado: El paquete ${datos.paquete.toUpperCase()} solo permite un máximo de ${maxFotosPermitidas} fotos.`);
+      mostrarToast(`Límite alcanzado: El paquete ${datos.paquete.toUpperCase()} solo permite un máximo de ${maxFotosPermitidas} fotos.`, "error");
       return;
     }
 
@@ -656,9 +687,9 @@ export default function App() {
           fotos: nuevasFotos
         };
       });
-      alert(`¡Imagen para el casillero #${index + 1} cargada exitosamente a Cloudinary! 🌐🌸`);
+      mostrarToast(`¡Imagen para el casillero #${index + 1} cargada exitosamente a Cloudinary! 🌐🌸`, "success");
     } catch (err: any) {
-      alert("Error al cargar imagen en galería: " + err.message);
+      mostrarToast("Error al cargar imagen en galería: " + err.message, "error");
     } finally {
       setSubiendoCloudinary(false);
     }
@@ -695,7 +726,7 @@ export default function App() {
   // Itinerario: Agregar evento
   const handleAgregarItinerario = () => {
     if (!nuevoItinHora || !nuevoItinEvento) {
-      alert("Por favor rellena ambos campos: Hora y Evento.");
+      mostrarToast("Por favor rellena ambos campos: Hora y Evento.", "error");
       return;
     }
     setDatos(prev => ({
@@ -756,7 +787,7 @@ export default function App() {
   // Invitados: Agregar
   const handleAgregarInvitado = () => {
     if (!nuevoInvitadoNombre.trim()) {
-      alert("Por favor escribe el nombre de la familia o invitado.");
+      mostrarToast("Por favor escribe el nombre de la familia o invitado.", "error");
       return;
     }
     setDatos(prev => ({
@@ -1417,8 +1448,8 @@ export default function App() {
                             type="button"
                             onClick={() => {
                               navigator.clipboard.writeText(getShareUrl())
-                                .then(() => alert("¡Enlace de invitación copiado con éxito! 🌸✨"))
-                                .catch(err => alert("Error al copiar enlace: " + err));
+                                .then(() => mostrarToast("¡Enlace de invitación copiado con éxito! 🌸✨", "success"))
+                                .catch(err => mostrarToast("Error al copiar enlace: " + err, "error"));
                             }}
                             className="px-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-xs"
                             title="Copiar enlace"
@@ -1475,8 +1506,8 @@ export default function App() {
                           onClick={() => {
                             const catUrl = getCatalogUrl();
                             navigator.clipboard.writeText(catUrl)
-                              .then(() => alert("¡Enlace del Catálogo de Temas copiado con éxito! 📂✨ Admite navegación por todos los demos en vivo."))
-                              .catch(err => alert("Error al copiar enlace: " + err));
+                              .then(() => mostrarToast("¡Enlace del Catálogo de Temas copiado con éxito! 📂✨ Admite navegación por todos los demos en vivo.", "success"))
+                              .catch(err => mostrarToast("Error al copiar enlace: " + err, "error"));
                           }}
                           className="px-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-xs"
                           title="Copiar enlace del catálogo"
@@ -2342,8 +2373,8 @@ export default function App() {
                                 onClick={() => {
                                   const customLink = getShareUrl(index);
                                   navigator.clipboard.writeText(customLink)
-                                    .then(() => alert(`¡Enlace de invitación personalizado para "${item.nombre}" copiado al portapapeles! 🌸`))
-                                    .catch(err => alert("Error al copiar: " + err));
+                                    .then(() => mostrarToast(`¡Enlace de invitación personalizado para "${item.nombre}" copiado al portapapeles! 🌸`, "success"))
+                                    .catch(err => mostrarToast("Error al copiar: " + err, "error"));
                                 }}
                                 className="p-1 hover:bg-slate-50 text-indigo-600 hover:text-indigo-800 rounded transition cursor-pointer"
                                 title="Copiar enlace personalizado"
@@ -2447,6 +2478,70 @@ export default function App() {
         </section>
 
       </div>
+
+      {/* NOTIFICACIÓN TOAST INLINE */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-[100] max-w-sm bg-white border border-slate-150 rounded-2xl shadow-xl p-4 flex items-start gap-3 animate-slideIn animate-duration-300">
+          <div className={`p-1.5 rounded-lg shrink-0 ${
+            toast.tipo === "success" ? "bg-emerald-50 text-emerald-650" :
+            toast.tipo === "error" ? "bg-rose-50 text-rose-600" :
+            "bg-blue-50 text-blue-600"
+          }`}>
+            {toast.tipo === "success" ? (
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+            ) : toast.tipo === "error" ? (
+              <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+              </svg>
+            )}
+          </div>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-slate-800 leading-normal">{toast.mensaje}</p>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setToast(null)} 
+            className="text-slate-400 hover:text-slate-600 select-none cursor-pointer p-0.5 rounded"
+          >
+            <svg className="w-3.5 h-3.5 fill-none stroke-current" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl animate-scaleIn">
+            <h4 className="text-sm font-extrabold text-slate-900 mb-2">{confirmModal.titulo}</h4>
+            <p className="text-xs text-slate-600 leading-relaxed mb-6">{confirmModal.mensaje}</p>
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  confirmModal.onAceptar();
+                  setConfirmModal(null);
+                }}
+                className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-lg transition cursor-pointer shadow-sm"
+              >
+                Proceder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
