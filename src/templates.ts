@@ -196,7 +196,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       const ribbonColor = tema.id === "neon" ? "#FF007F" : tema.colors.accent;
       const oppositeColor = tema.id === "neon" ? "#00F0FF" : tema.colors.border;
       aperturaHTML = `
-  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex overflow-hidden select-none" onclick="comenzarExperienciaCortina()">
+  <div id="pantalla-apertura" class="fixed inset-0 z-50 flex overflow-hidden select-none" style="background: ${tema.colors.bg};" onclick="comenzarExperienciaCortina()">
     <style>
       .curtain-panel {
         position: absolute;
@@ -376,10 +376,18 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       z-index: -1;
       pointer-events: none;
     }
-    /* Hacer el fondo de apertura, portada y cierre transparentes para que luzca la imagen global */
-    #pantalla-apertura, [data-section="portada"], footer[data-section="cierre"] {
+    /* Hacer el fondo de portada y cierre transparentes para que luzca la imagen global.
+       La pantalla de apertura debe mantenerse sólida para ocultar por completo la invitación hasta que se abra */
+    [data-section="portada"], footer[data-section="cierre"] {
       background: transparent !important;
       background-image: none !important;
+    }
+    #pantalla-apertura {
+      background-image: url('${datos.bgImages[tema.id]}') !important;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      background-color: ${tema.colors.bg} !important;
     }
     /* Agregar un velo sutil que de soporte a los temas claros/oscuros */
     .theme-container::before {
@@ -411,18 +419,49 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
 
     /* Ocultar/Apagar cajas del fondo de los textos de las secciones si el cliente lo prefiere */
     ${datos.mostrarCajasSecciones === false ? `
+    /* Transparentar contenedores y tarjetas internas p/integrar con el fondo original */
     .theme-container .bg-white.rounded-3xl, 
     .theme-container .gold-card,
     .theme-container [data-section] > .bg-white,
     .theme-container [data-section] > .rounded-3xl,
     .theme-container .bg-white\\/45,
-    .theme-container [data-section="cuenta"] > div {
+    .theme-container [data-section="cuenta"] > div,
+    .theme-container [data-section] .bg-white,
+    .theme-container [data-section] .bg-gray-50,
+    .theme-container [data-section] .bg-rose-50\\/20,
+    .theme-container [data-section] .bg-[\\#FCF9F2],
+    .theme-container [data-section] .bg-[\\#FCF5FE],
+    .theme-container [data-section] .bg-[\\#FCF6F7],
+    .theme-container [data-section] .bg-[\\#111B30],
+    .theme-container [data-section] .bg-[\\#F4F7F5] {
       background-color: transparent !important;
       background: transparent !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       border: none !important;
       box-shadow: none !important;
+    }
+
+    /* Respetar color de acento y colores específicos legibles en el fondo natural */
+    .theme-container .text-accent,
+    .theme-container [id^="countdown-"] {
+      color: ${tema.colors.accent} !important;
+    }
+
+    .theme-container .text-primary {
+      color: ${tema.colors.primary} !important;
+    }
+
+    .theme-container .cursive-text,
+    .theme-container .font-cursive {
+      color: ${tema.colors.accent} !important;
+    }
+
+    /* Asegurar botones con fondo de acento permanezcan coloridos y visibles */
+    .theme-container a.bg-accent,
+    .theme-container button.bg-accent {
+      background-color: ${tema.colors.accent} !important;
+      color: #FFFFFF !important;
     }
     ` : ""}
 

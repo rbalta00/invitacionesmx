@@ -27,6 +27,51 @@ import { temas, paquetes, datosDefault, getFotosPorTema } from "./data";
 import { generarHTMLFinal } from "./templates";
 
 // Helper functions for UTF-8 safe and compact Base64 encoding/decoding of state in URLs
+const KEY_MAP: Record<string, string> = {
+  paquete: "p",
+  tema: "t",
+  nombre: "n",
+  fecha: "f",
+  mensajeBienvenida: "m",
+  ceremonia: "c",
+  recepcion: "r",
+  itinerario: "i",
+  dressCode: "d",
+  colorSugerido: "s",
+  padres: "x",
+  padrinos: "y",
+  mesaRegalos: "g",
+  datosBancarios: "b",
+  fotos: "k",
+  bgImages: "bg",
+  hashtag: "h",
+  mostrarCajasSecciones: "mc",
+  whatsappConfirmacion: "w",
+  cancion: "a",
+  linkPersonalizado: "l",
+  invitados: "v",
+  fotoPortada: "fp",
+  mostrarFotoPortada: "mfp"
+};
+
+const SUB_KEY_MAP: Record<string, string> = {
+  lugar: "lu",
+  hora: "ho",
+  direccion: "di",
+  maps: "ma",
+  evento: "ev"
+};
+
+const REVERSE_KEY_MAP: Record<string, string> = {};
+const REVERSE_SUB_KEY_MAP: Record<string, string> = {};
+
+for (const [k, v] of Object.entries(KEY_MAP)) {
+  REVERSE_KEY_MAP[v] = k;
+}
+for (const [k, v] of Object.entries(SUB_KEY_MAP)) {
+  REVERSE_SUB_KEY_MAP[v] = k;
+}
+
 const encodeState = (obj: any): string => {
   try {
     const copy = JSON.parse(JSON.stringify(obj));
@@ -51,7 +96,57 @@ const encodeState = (obj: any): string => {
       }
       copy.bgImages = filteredBg;
     }
-    const str = JSON.stringify(copy);
+
+    const paq = copy.paquete || "basico";
+    const base = datosDefault[paq] || datosDefault.basico;
+
+    // Create compact mini state
+    const mini: any = {};
+    mini.p = paq;
+    if (copy.tema) mini.t = copy.tema;
+
+    for (const [fullKey, shortKey] of Object.entries(KEY_MAP)) {
+      if (fullKey === "paquete" || fullKey === "tema") continue;
+      
+      const val = copy[fullKey];
+      const baseVal = (base as any)[fullKey];
+
+      if (val === undefined || val === null) continue;
+
+      // Skip identical default values to save massive amount of space
+      if (JSON.stringify(val) === JSON.stringify(baseVal)) {
+        continue;
+      }
+
+      if (fullKey === "ceremonia" || fullKey === "recepcion") {
+        if (val && typeof val === "object") {
+          const subMini: any = {};
+          for (const [sk, sv] of Object.entries(val)) {
+            const shortSk = SUB_KEY_MAP[sk] || sk;
+            subMini[shortSk] = sv;
+          }
+          mini[shortKey] = subMini;
+        }
+      } else if (fullKey === "itinerario") {
+        if (Array.isArray(val)) {
+          mini[shortKey] = val.map((item: any) => ({
+            ho: item.hora,
+            ev: item.evento
+          }));
+        }
+      } else if (fullKey === "invitados") {
+        if (Array.isArray(val)) {
+          mini[shortKey] = val.map((item: any) => ({
+            n: item.nombre,
+            p: item.pases
+          }));
+        }
+      } else {
+        mini[shortKey] = val;
+      }
+    }
+
+    const str = JSON.stringify(mini);
     return btoa(unescape(encodeURIComponent(str)));
   } catch (e) {
     console.error("Error al codificar estado para compartir:", e);
@@ -61,7 +156,56 @@ const encodeState = (obj: any): string => {
 
 const decodeState = (str: string): any => {
   try {
-    return JSON.parse(decodeURIComponent(escape(atob(str))));
+    if (!str) return null;
+    const decodedStr = decodeURIComponent(escape(atob(str)));
+    const parsed = JSON.parse(decodedStr);
+
+    // If legacy link (full JSON rather than compact format), return as is
+    if (parsed.paquete) {
+      return parsed;
+    }
+
+    const paq = parsed.p || "basico";
+    const base = datosDefault[paq] || datosDefault.basico;
+
+    // Start with default package structure
+    const result = JSON.parse(JSON.stringify(base));
+    result.paquete = paq;
+    if (parsed.t) result.tema = parsed.t;
+
+    for (const [shortKey, fullKey] of Object.entries(REVERSE_KEY_MAP)) {
+      if (fullKey === "paquete" || fullKey === "tema") continue;
+
+      const val = parsed[shortKey];
+      if (val === undefined || val === null) continue;
+
+      if (fullKey === "ceremonia" || fullKey === "recepcion") {
+        const subObj: any = { lugar: "", hora: "", direccion: "", maps: "" };
+        for (const [sk, sv] of Object.entries(val)) {
+          const fullSk = REVERSE_SUB_KEY_MAP[sk] || sk;
+          subObj[fullSk] = sv;
+        }
+        result[fullKey] = subObj;
+      } else if (fullKey === "itinerario") {
+        if (Array.isArray(val)) {
+          result[fullKey] = val.map((item: any) => ({
+            hora: item.ho || "",
+            evento: item.ev || ""
+          }));
+        }
+      } else if (fullKey === "invitados") {
+        if (Array.isArray(val)) {
+          result[fullKey] = val.map((item: any) => ({
+            nombre: item.n || "",
+            pases: item.p || 2
+          }));
+        }
+      } else {
+        result[fullKey] = val;
+      }
+    }
+
+    return result;
   } catch (e) {
     console.error("Error al decodificar estado desde compartir:", e);
     return null;
@@ -83,10 +227,7 @@ export default function App() {
         const decoded = decodeState(d);
         if (decoded && typeof decoded === "object") {
           return {
-            initialDatos: {
-              ...datosDefault.premium,
-              ...decoded
-            },
+            initialDatos: decoded,
             initialTemaId: decoded.tema || targetTema,
             isView,
             isCatalog,
