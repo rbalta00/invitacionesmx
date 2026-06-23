@@ -212,7 +212,7 @@ const decodeState = (str: string): any => {
   }
 };
 
-export default function App() {
+async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
   // Cargar estado inicial desde la URL si existe para la vista compartida o el editor precargado
   const getInitialState = (): { initialDatos: InvitacionDatos; initialTemaId: string; isView: boolean; isCatalog: boolean; initialCatalogTemaId: string | null } => {
     try {
