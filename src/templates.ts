@@ -2,9 +2,10 @@ import { InvitacionDatos, TemaConfig } from "./types";
 import { paquetes, getFotosPorTema } from "./data";
 
 export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): string {
-  // Aseguramos que existan fotos, si no, tomamos las ficticias del tema
-  const listadoFotos = datos.fotos && datos.fotos.length > 0 
-    ? datos.fotos 
+  // Aseguramos que existan fotos válidas, si no, tomamos las ficticias del tema
+  const fotosValidas = (datos.fotos || []).filter(f => f && typeof f === "string" && f.trim() !== "");
+  const listadoFotos = fotosValidas.length > 0 
+    ? fotosValidas 
     : getFotosPorTema(tema.id);
 
   const configPaquete = paquetes[datos.paquete];
@@ -352,15 +353,48 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     /* Estilos personalizados del tema elegido */
     ${tema.customStyle || ""}
 
+    /* Ocultar el fondo y el contenido de la invitación antes de abrir el sobre */
+    body:not(.experiencia-iniciada) {
+      overflow: hidden !important;
+      height: 100vh !important;
+      background: ${tema.bgGradient} !important;
+      background-image: none !important;
+    }
+    body:not(.experiencia-iniciada)::after {
+      background-image: none !important;
+      display: none !important;
+    }
+    body:not(.experiencia-iniciada) > *:not(#pantalla-apertura):not(script) {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+
+    body.experiencia-iniciada > *:not(#pantalla-apertura):not(script) {
+      animation: fadeInContent 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeInContent {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilo del sobre o pantalla de apertura (siempre sólido hasta que se abra) */
+    #pantalla-apertura {
+      background-image: none !important;
+      background: ${tema.bgGradient} !important;
+      background-color: ${tema.colors.bg} !important;
+      z-index: 50;
+    }
+
     ${datos.bgImages && datos.bgImages[tema.id] ? `
-    /* Imagen de fondo cargada para este tema por separado */
+    /* Imagen de fondo cargada para este tema por separado (solo se muestra al abrir el sobre) */
     html {
       background: transparent !important;
     }
-    body {
+    body.experiencia-iniciada {
       background-color: transparent !important;
     }
-    .theme-container {
+    body.experiencia-iniciada, body.experiencia-iniciada.theme-container {
       background-image: url('${datos.bgImages[tema.id]}') !important;
       background-size: cover !important;
       background-position: center !important;
@@ -368,7 +402,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       background-attachment: fixed !important;
     }
     /* Capa de fondo fija de respaldo para cobertura total garantizada en smartphones */
-    .theme-container::after {
+    body.experiencia-iniciada::after, body.experiencia-iniciada.theme-container::after {
       content: "";
       position: fixed;
       inset: 0;
@@ -379,21 +413,13 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       z-index: -1;
       pointer-events: none;
     }
-    /* Hacer el fondo de portada y cierre transparentes para que luzca la imagen global.
-       La pantalla de apertura debe mantenerse sólida para ocultar por completo la invitación hasta que se abra */
+    /* Hacer el fondo de portada y cierre transparentes para que luzca la imagen global. */
     [data-section="portada"], footer[data-section="cierre"] {
       background: transparent !important;
       background-image: none !important;
     }
-    #pantalla-apertura {
-      background-image: url('${datos.bgImages[tema.id]}') !important;
-      background-size: cover !important;
-      background-position: center !important;
-      background-repeat: no-repeat !important;
-      background-color: ${tema.colors.bg} !important;
-    }
     /* Agregar un velo sutil que de soporte a los temas claros/oscuros */
-    .theme-container::before {
+    body.experiencia-iniciada::before, body.experiencia-iniciada.theme-container::before {
       content: "";
       position: fixed;
       inset: 0;
@@ -999,8 +1025,9 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
         console.warn("Error auto-buscando pase:", err);
       }
 
-      // Si no hay pantalla de apertura, mostrar el reproductor de música de inmediato
+      // Si no hay pantalla de apertura, activar la experiencia de inmediato
       if (!document.getElementById('pantalla-apertura')) {
+        document.body.classList.add('experiencia-iniciada');
         const sw = document.getElementById('music-widget');
         if (sw) sw.classList.remove('hidden');
       }
@@ -1035,6 +1062,9 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     }
 
     function comenzarExperiencia() {
+      // Activar clase para iniciar transición de contenidos y fondos
+      document.body.classList.add('experiencia-iniciada');
+
       // Esconder pantalla de bienvenida
       const overlay = document.getElementById('pantalla-apertura');
       if (overlay) {

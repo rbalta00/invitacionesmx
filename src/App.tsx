@@ -287,6 +287,25 @@ const getDatosCatalogTema = (baseDatos: any, t: any): any => {
   };
 };
 
+// Obtiene los datos del catálogo dando prioridad a diseños guardados por el usuario para cada tema específico
+const getDatosVisualizacionCatalog = (t: any): any => {
+  try {
+    const saved = localStorage.getItem(`xv_diseño_guardado_tema_${t.id}`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === "object") {
+        return {
+          ...parsed,
+          tema: t.id
+        };
+      }
+    }
+  } catch (err) {
+    console.error("Error al cargar diseño guardado del catálogo:", err);
+  }
+  return getDatosCatalogTema(datosDefault.premium, t);
+};
+
 // Mapeo de IDs de secciones a nombres legibles en español con emojis
 const NOMBRES_SECCIONES: Record<string, string> = {
   apertura: "Pantalla de apertura 🎀",
@@ -314,7 +333,7 @@ declare global {
   }
 }
 export default function App() {
-  // Cargar estado inicial desde la URL si existe para la vista compartida o el editor precargado
+  // Cargar estado inicial desde la URL si existe o desde localStorage, o el editor precargado
   const getInitialState = (): { initialDatos: InvitacionDatos; initialTemaId: string; isView: boolean; isCatalog: boolean; initialCatalogTemaId: string | null } => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -336,6 +355,26 @@ export default function App() {
           };
         }
       }
+
+      // Cargar desde localStorage si no viene por parámetro de compartir
+      try {
+        const saved = localStorage.getItem('xv_datos_invitacion');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === "object") {
+            return {
+              initialDatos: parsed,
+              initialTemaId: parsed.tema || targetTema,
+              isView,
+              isCatalog,
+              initialCatalogTemaId
+            };
+          }
+        }
+      } catch (err) {
+        console.error("Error al cargar desde localStorage:", err);
+      }
+
       return {
         initialDatos: { ...datosDefault.premium },
         initialTemaId: targetTema,
@@ -358,6 +397,17 @@ export default function App() {
 
   // Estado principal de los datos de la invitación
   const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
+
+  // Auto-guardar cambios de datos en localStorage para persistencia local
+  useEffect(() => {
+    try {
+      if (datos) {
+        localStorage.setItem('xv_datos_invitacion', JSON.stringify(datos));
+      }
+    } catch (err) {
+      console.error("Error al guardar en localStorage:", err);
+    }
+  }, [datos]);
 
   // Estado para notificaciones Toast no bloqueantes (reemplazo de alert)
   const [toast, setToast] = useState<{ mensaje: string; tipo: "success" | "error" | "info" } | null>(null);
@@ -512,6 +562,19 @@ export default function App() {
   // Tema seleccionado real
   const temaActual = temas.find(t => t.id === selectedTemaId) || temas[0];
 
+  // Estado para saber si el tema actual tiene un diseño guardado en el catálogo
+  const [tieneDiseñoGuardado, setTieneDiseñoGuardado] = useState<boolean>(false);
+
+  // Sincronizar el estado del diseño guardado al cambiar el tema actual
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`xv_diseño_guardado_tema_${selectedTemaId}`);
+      setTieneDiseñoGuardado(!!saved);
+    } catch (e) {
+      setTieneDiseñoGuardado(false);
+    }
+  }, [selectedTemaId]);
+
   // Sincronizar tema de datos cuando elegimos tema
   useEffect(() => {
     setDatos(prev => ({
@@ -546,10 +609,11 @@ export default function App() {
       mensaje: `Al cambiar al paquete "${paqKey.toUpperCase()}", cargaremos los datos de prueba idóneos para ese nivel de secciones. Se reemplazarán tus cambios actuales. ¿Deseas proceder?`,
       onAceptar: () => {
         const datosBase = datosDefault[paqKey];
-        setDatos({
+        setDatos(prev => ({
           ...datosBase,
-          paquete: paqKey
-        });
+          paquete: paqKey,
+          bgImages: { ...prev.bgImages, ...datosBase.bgImages } // Preservamos los fondos subidos
+        }));
         setSelectedTemaId(datosBase.tema);
         setPanelPestana("ajustes");
         mostrarToast(`¡Se ha cambiado al paquete ${paqKey.toUpperCase()}! ✨`, "success");
@@ -563,7 +627,7 @@ export default function App() {
       titulo: "Limpiar formulario completo",
       mensaje: "¿Estás seguro de que deseas reiniciar todos los campos del generador a su estado inicial?",
       onAceptar: () => {
-        setDatos({
+        setDatos(prev => ({
           paquete: "basico",
           tema: "dorado-clasico",
           nombre: "",
@@ -583,8 +647,9 @@ export default function App() {
           whatsappConfirmacion: "52",
           cancion: "",
           linkPersonalizado: "",
-          invitados: []
-        });
+          invitados: [],
+          bgImages: prev.bgImages // Preservamos los fondos subidos
+        }));
         setSelectedTemaId("dorado-clasico");
         mostrarToast("¡El formulario ha sido reiniciado! 💮", "info");
       }
@@ -1021,7 +1086,7 @@ export default function App() {
             /* Render del Demo en vivo dentro de un iframe interactivo */
             <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-slate-200 overflow-hidden shadow-xl bg-white">
               <iframe
-                srcDoc={generarHTMLFinal({ ...getDatosCatalogTema(datosDefault.premium, temas.find(t => t.id === selectedCatalogTemaId) || temas[0]), seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
+                srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(temas.find(t => t.id === selectedCatalogTemaId) || temas[0]), seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
                 className="w-full h-full border-0"
                 title="Invitación Demo en Vivo"
               />
@@ -1105,7 +1170,7 @@ export default function App() {
                             {/* Iframe minificado cargando el HTML final y ajustado exactamente al tamaño de la pantalla */}
                             <div className="w-full h-full overflow-hidden absolute inset-0 bg-slate-950">
                               <iframe 
-                                srcDoc={generarHTMLFinal({ ...getDatosCatalogTema(datos || datosDefault.premium, t), seccionesExcluidas: [...((datos || datosDefault.premium).seccionesExcluidas || []), "apertura"] }, t)}
+                                srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(t), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t).seccionesExcluidas || []), "apertura"] }, t)}
                                 className="absolute border-0 pointer-events-none select-none"
                                 style={{
                                   width: "354px",
@@ -1489,6 +1554,89 @@ export default function App() {
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* GESTIÓN DE FONDO EXCLUSIVO DEL TEMA ACTUAL */}
+                  <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🖼️</span>
+                      <div>
+                        <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest">
+                          Fondo del Tema: {temaActual.nombre}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 leading-normal">
+                          Carga un fondo exclusivo para este tema a Cloudinary. Se guardará de forma independiente.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {datos.bgImages?.[selectedTemaId] ? (
+                        <div className="p-1.5 border border-indigo-150 rounded-lg bg-white flex items-center gap-2 flex-1 min-w-0">
+                          <img 
+                            src={datos.bgImages[selectedTemaId]} 
+                            alt="Fondo activo" 
+                            className="w-10 h-8 rounded object-cover border shrink-0 bg-slate-100"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-bold text-slate-750 block truncate">Fondo Personalizado Activo</span>
+                            <span className="text-[9px] font-mono text-slate-400 block truncate leading-tight">
+                              {datos.bgImages[selectedTemaId]}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-2 border border-slate-200/60 rounded-lg bg-slate-100/30 flex items-center gap-2 flex-1">
+                          <span className="text-sm shrink-0">🎨</span>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-500 block">Fondo predeterminado del tema</span>
+                            <span className="text-[9px] text-slate-400 block leading-tight">Usa los degradados o texturas nativos.</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center justify-center gap-1.5 p-2 border border-dashed border-indigo-200 rounded-lg bg-white hover:bg-indigo-50/40 transition cursor-pointer text-center group">
+                        <Upload className={`w-3.5 h-3.5 text-indigo-500 group-hover:text-indigo-600 ${subiendoCloudinary ? 'animate-bounce' : ''}`} />
+                        <span className="text-[10px] font-extrabold text-indigo-700">
+                          {subiendoCloudinary ? "Subiendo..." : "Subir a Cloudinary"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleBgImageUpload}
+                          className="hidden"
+                          disabled={subiendoCloudinary}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={handleClearBgImage}
+                        disabled={!datos.bgImages?.[selectedTemaId]}
+                        className={`flex items-center justify-center gap-1.5 p-2 border rounded-lg transition text-center ${
+                          datos.bgImages?.[selectedTemaId]
+                            ? "bg-white border-rose-200 hover:bg-rose-50 text-rose-700 cursor-pointer font-bold text-[10px]"
+                            : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed font-medium text-[10px]"
+                        }`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Restablecer</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="block text-[10px] font-semibold text-slate-500">O ingresar link directo de fondo:</span>
+                      <input
+                        type="text"
+                        value={datos.bgImages?.[selectedTemaId] && !datos.bgImages[selectedTemaId].startsWith("data:") ? datos.bgImages[selectedTemaId] : ""}
+                        onChange={(e) => handleBgImageUrlChange(e.target.value)}
+                        placeholder="Pegar link de imagen de fondo..."
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-[11px] focus:border-indigo-500 outline-none font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -2656,6 +2804,63 @@ export default function App() {
               {/* Botón Home Virtual del Smartphone */}
               <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-800 rounded-full z-20"></div>
 
+            </div>
+
+            {/* BOTÓN PARA GUARDAR DISEÑO EN EL CATÁLOGO */}
+            <div className="w-full mt-4 px-2 flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.setItem(`xv_diseño_guardado_tema_${selectedTemaId}`, JSON.stringify(datos));
+                    setTieneDiseñoGuardado(true);
+                    mostrarToast(`¡Diseño guardado con éxito en el catálogo para el tema "${temaActual.nombre}"! 🌟💖`, "success");
+                  } catch (err) {
+                    mostrarToast("Error al guardar el diseño en el catálogo.", "error");
+                  }
+                }}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all duration-200 active:scale-95 shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Guarda esta invitación como la versión activa de este tema en el catálogo"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Guardar Diseño en Catálogo de este Tema 🌸
+              </button>
+
+              <div className="flex items-center gap-2">
+                {tieneDiseñoGuardado ? (
+                  <span className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                    <span>✓</span> Diseño personalizado activo
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Usando diseño predeterminado
+                  </span>
+                )}
+
+                {tieneDiseñoGuardado && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmModal({
+                        titulo: "Restablecer diseño predeterminado",
+                        onAceptar: () => {
+                          try {
+                            localStorage.removeItem(`xv_diseño_guardado_tema_${selectedTemaId}`);
+                            setTieneDiseñoGuardado(false);
+                            mostrarToast(`Se ha restablecido el diseño de fábrica para "${temaActual.nombre}".`, "info");
+                          } catch (err) {
+                            mostrarToast("Error al restablecer el diseño.", "error");
+                          }
+                        },
+                        mensaje: `¿Deseas eliminar tu diseño personalizado para el tema "${temaActual.nombre}" en el catálogo y volver al de fábrica?`
+                      });
+                    }}
+                    className="text-[10px] text-rose-500 hover:text-rose-700 transition font-bold underline cursor-pointer select-none"
+                  >
+                    Restablecer
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Aviso breve */}
