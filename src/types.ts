@@ -41,6 +41,7 @@ export interface InvitacionDatos {
   }>;
   bgImages?: Record<string, string>;
   seccionesExcluidas?: string[];
+  mostrarAnimacionCaida?: boolean;
 }
 
 export interface PaqueteConfig {

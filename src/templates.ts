@@ -520,6 +520,34 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     section {
       width: 100%;
     }
+
+    /* Animación de caída de elementos decorativos (pétalos, estrellas, moños, etc.) */
+    @keyframes fallAndSway {
+      0% {
+        transform: translateY(-20px) rotate(0deg) translateX(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.8;
+      }
+      50% {
+        transform: translateY(50vh) rotate(180deg) translateX(25px);
+      }
+      90% {
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg) translateX(-20px);
+        opacity: 0;
+      }
+    }
+    .falling-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 99;
+      will-change: transform, opacity;
+      user-select: none;
+    }
   </style>
 </head>
 <body class="theme-container min-h-screen text-textThemeDark selection:bg-primary/20 selection:text-accent">
@@ -1030,6 +1058,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
         document.body.classList.add('experiencia-iniciada');
         const sw = document.getElementById('music-widget');
         if (sw) sw.classList.remove('hidden');
+        iniciarAnimacionCaida();
       }
     });
 
@@ -1084,6 +1113,87 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
           console.log("Auto-play blocked or error: ", err);
         });
       }
+      iniciarAnimacionCaida();
+    }
+
+    let animacionIniciada = false;
+    function iniciarAnimacionCaida() {
+      if (animacionIniciada) return;
+      if (${datos.mostrarAnimacionCaida === false}) return;
+      animacionIniciada = true;
+
+      const container = document.createElement('div');
+      container.id = 'particle-container';
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100vw';
+      container.style.height = '100vh';
+      container.style.pointerEvents = 'none';
+      container.style.zIndex = '99';
+      container.style.overflow = 'hidden';
+      document.body.appendChild(container);
+
+      // Símbolos de caída dependiendo del tema
+      const simbolosPorTema = {
+        'dorado-clasico': ['✨', '🌟', '🪙', '✨'],
+        'mariposas': ['🦋', '🌸', '✨', '💜'],
+        'floral-acuarela': ['🌸', '🌹', '🍃', '💮'],
+        'celestial': ['⭐', '✨', '🌙', '🌌'],
+        'coquette-pink': ['🎀', '💖', '🤍', '🌸'],
+        'coquette-luxe': ['🎀', '✨', '💖', '⚜️'],
+        'boho-chic': ['🍃', '🍂', '🌾', '✨'],
+        'neon': ['⚡', '✨', '🎵', '💚', '💖', '💙'],
+        'princesa-elegante': ['👑', '✨', '💖', '⭐'],
+        'rose-gold': ['🌸', '✨', '🌹', '🌟'],
+        'esmeralda': ['🍃', '✨', '💚', '🌟'],
+        'vintage-garden': ['🌸', '🌹', '🍃', '🦋']
+      };
+
+      const simbolos = simbolosPorTema['${tema.id}'] || ['✨', '🌸', '🍃'];
+
+      function crearParticula() {
+        if (!document.getElementById('particle-container')) return;
+        const p = document.createElement('div');
+        p.className = 'falling-particle';
+        p.innerText = simbolos[Math.floor(Math.random() * simbolos.length)];
+        
+        const startX = Math.random() * 100; // porcentaje
+        const startY = -5; // arriba de la pantalla
+        const size = Math.random() * 20 + 10; // entre 10px y 30px
+        const duration = Math.random() * 8 + 6; // velocidad entre 6s y 14s
+        const delay = Math.random() * 5; // retraso de inicio
+        const opacity = Math.random() * 0.5 + 0.4; // entre 0.4 y 0.9
+
+        p.style.position = 'absolute';
+        p.style.top = startY + 'vh';
+        p.style.left = startX + 'vw';
+        p.style.fontSize = size + 'px';
+        p.style.opacity = opacity.toString();
+        p.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.15))';
+        p.style.animation = "fallAndSway " + duration + "s linear " + delay + "s infinite";
+        
+        container.appendChild(p);
+
+        // Remover la partícula después de que termine su ciclo para no saturar el DOM
+        setTimeout(() => {
+          p.remove();
+        }, (duration + delay) * 1000);
+      }
+
+      // Generar lote inicial de partículas
+      for (let i = 0; i < 25; i++) {
+        crearParticula();
+      }
+
+      // Seguir generando partículas cada cierto tiempo
+      const interval = setInterval(() => {
+        if (!document.getElementById('particle-container')) {
+          clearInterval(interval);
+          return;
+        }
+        crearParticula();
+      }, 400);
     }
 
     function toggleMusic() {

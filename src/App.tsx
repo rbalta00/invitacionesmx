@@ -9,6 +9,8 @@ import {
   Download, 
   RefreshCw, 
   Smartphone, 
+  Tablet,
+  Monitor,
   Copy, 
   Check, 
   Upload, 
@@ -52,7 +54,8 @@ const KEY_MAP: Record<string, string> = {
   invitados: "v",
   fotoPortada: "fp",
   mostrarFotoPortada: "mfp",
-  seccionesExcluidas: "se"
+  seccionesExcluidas: "se",
+  mostrarAnimacionCaida: "mac"
 };
 
 const SUB_KEY_MAP: Record<string, string> = {
@@ -649,6 +652,10 @@ export default function App() {
   const [datosCopiados, setDatosCopiados] = useState(false);
   const [generandoEnlace, setGenerandoEnlace] = useState(false);
 
+  // Optimizaciones de PC: Dispositivo de vista previa y escala de zoom
+  const [previewDevice, setPreviewDevice] = useState<"mobile" | "tablet" | "desktop">("mobile");
+  const [previewZoom, setPreviewZoom] = useState<number>(0.85);
+
   // Estados para compartir por WhatsApp
   const [whatsappDestino, setWhatsappDestino] = useState("522217445410");
   const [whatsappTemplateId, setWhatsappTemplateId] = useState("completo");
@@ -781,6 +788,17 @@ export default function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // Abrir vista previa en nueva pestaña (optimización para PC)
+  const handleAbrirDemoNuevaPestana = () => {
+    const htmlCompleto = generarHTMLFinal(datos, temaActual);
+    const blob = new Blob([htmlCompleto], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 4000);
   };
 
   // Copiar código HTML final al portapapeles
@@ -1390,7 +1408,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+    <div className="lg:h-screen lg:overflow-hidden min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       
       {/* HEADER PRINCIPAL DE LA HERRAMIENTA PRIVADA */}
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0 shadow-sm">
@@ -1467,13 +1485,13 @@ export default function App() {
       </header>
 
       {/* DASHBOARD PRINCIPAL DE TRABAJO */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row lg:overflow-hidden">
         
         {/* PANEL IZQUIERDO: SECCIONES DE CONFIGURACIÓN Y FORMULARIO */}
-        <aside className="w-full lg:w-[48%] xl:w-[45%] border-r border-slate-200 flex flex-col bg-white shrink-0">
+        <aside className="w-full lg:w-[48%] xl:w-[45%] border-r border-slate-200 flex flex-col bg-white shrink-0 lg:h-full lg:overflow-hidden">
           
           {/* BARRA DE PESTAÑAS DEL EXPEDIENTE */}
-          <div className="flex border-b border-slate-200 bg-white overflow-x-auto no-scrollbar whitespace-nowrap scroll-smooth">
+          <div className="flex border-b border-slate-200 bg-white overflow-x-auto no-scrollbar whitespace-nowrap scroll-smooth shrink-0">
             <button 
               onClick={() => setPanelPestana("ajustes")}
               className={`px-4 py-3.5 text-xs font-bold border-b-2 flex items-center gap-1.5 transition cursor-pointer ${panelPestana === "ajustes" ? "border-indigo-600 text-indigo-600 bg-indigo-50/20" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/50"}`}
@@ -1763,6 +1781,29 @@ export default function App() {
                         <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-550"></div>
                         <span className="ml-2 text-xs font-bold text-pink-700 w-12 text-right uppercase">
                           {datos.mostrarCajasSecciones !== false ? "ON" : "OFF"}
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-pink-100/60 pt-3">
+                      <div className="pr-3">
+                        <span className="block text-xs font-bold text-slate-800">
+                          Efecto de Animación de Caída
+                        </span>
+                        <span className="block text-[11px] text-slate-500 leading-normal mt-0.5">
+                          Activa una preciosa lluvia de flores, moños/listones, estrellas o mariposas flotando en la invitación según el tema elegido.
+                        </span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={datos.mostrarAnimacionCaida !== false}
+                          onChange={(e) => setDatos({ ...datos, mostrarAnimacionCaida: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-550"></div>
+                        <span className="ml-2 text-xs font-bold text-pink-700 w-12 text-right uppercase">
+                          {datos.mostrarAnimacionCaida !== false ? "ON" : "OFF"}
                         </span>
                       </label>
                     </div>
@@ -2862,52 +2903,174 @@ export default function App() {
 
         </aside>
 
-        {/* PANEL DERECHO: VISTA PREVIA DEL SMARTPHONE */}
-        <section className="flex-1 bg-slate-100 p-6 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* PANEL DERECHO: VISTA PREVIA MULTIDISPOSITIVO (OPTIMIZADO PARA TRABAJO EN PC) */}
+        <section className="flex-1 bg-slate-100 flex flex-col relative overflow-hidden lg:h-full">
           
-          {/* Fondo sutil degradado */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/5 blur-3xl rounded-full"></div>
-          
-          <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+          {/* BARRA DE HERRAMIENTAS DE MONITOR DE DISEÑO */}
+          <div className="bg-white border-b border-slate-200 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 shadow-xs z-20">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Monitor de Invitación</span>
+            </div>
             
-            {/* Indicador superior del Simulador */}
-            <div className="w-full flex items-center justify-between mb-3.5 px-2">
-              <div className="flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-bold text-slate-700">Vista Previa Móvil</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block animate-pulse"></span>
-                <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Sincronizado</span>
-              </div>
+            {/* SELECTOR DE MOCKUPS */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-inner">
+              <button
+                type="button"
+                onClick={() => { setPreviewDevice("mobile"); setPreviewZoom(0.85); }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${previewDevice === "mobile" ? "bg-white text-indigo-650 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+                title="Simulador de Smartphone Celular"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Móvil</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPreviewDevice("tablet"); setPreviewZoom(0.65); }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${previewDevice === "tablet" ? "bg-white text-indigo-650 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+                title="Simulador de Tablet / iPad"
+              >
+                <Tablet className="w-3.5 h-3.5" />
+                <span>Tablet</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewDevice("desktop")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer ${previewDevice === "desktop" ? "bg-white text-indigo-650 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+                title="Simulador de Pantalla Completa Escritorio"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>Escritorio</span>
+              </button>
             </div>
 
-            {/* MARCO VISUAL DEL TELÉFONO */}
-            <div className="relative w-full max-w-[375px] h-[720px] bg-slate-950 rounded-[40px] p-3.5 shadow-2xl border-4 border-slate-800 ring-4 ring-slate-200/50 flex flex-col overflow-hidden">
+            {/* CONTROLES DE ESCALA ZOOM Y NUEVA PESTAÑA */}
+            <div className="flex items-center gap-2">
+              {previewDevice !== "desktop" && (
+                <div className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                  <span className="text-[10px] text-slate-500 font-bold">Ajuste de Zoom:</span>
+                  <select
+                    value={previewZoom}
+                    onChange={(e) => setPreviewZoom(parseFloat(e.target.value))}
+                    className="bg-transparent border-0 text-[11px] font-bold text-slate-700 outline-none cursor-pointer focus:ring-0"
+                  >
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.75">75%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.85">85%</option>
+                    <option value="0.9">90%</option>
+                    <option value="0.95">95%</option>
+                    <option value="1">100%</option>
+                  </select>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleAbrirDemoNuevaPestana}
+                className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-600 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                title="Prueba en pantalla completa en una nueva pestaña del navegador"
+              >
+                <span>Nueva Pestaña ↗️</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ÁREA DE CONTENEDOR CENTRAL: MOCKUP RENDERER */}
+          <div className="flex-1 p-6 overflow-y-auto flex items-center justify-center relative min-h-0 bg-slate-100/50">
+            {/* Fondo decorativo blur */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 blur-3xl rounded-full pointer-events-none"></div>
+            
+            <div 
+              className="relative transition-all duration-300 ease-out z-10 flex flex-col items-center justify-center"
+              style={{
+                width: previewDevice === "mobile" ? "375px" : previewDevice === "tablet" ? "768px" : "100%",
+                height: previewDevice === "mobile" ? "720px" : previewDevice === "tablet" ? "980px" : "100%",
+                transform: previewDevice !== "desktop" ? `scale(${previewZoom})` : "none",
+                transformOrigin: "center center",
+              }}
+            >
               
-              {/* Altavoz y Cámara frontal del Smartphone (Notch) */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-slate-950 rounded-b-2xl z-30 flex items-center justify-center gap-1.5">
-                <div className="w-12 h-1 bg-slate-800 rounded-full"></div>
-                <div className="w-2.5 h-2.5 bg-slate-900 rounded-full border border-slate-800"></div>
-              </div>
+              {previewDevice === "mobile" && (
+                /* MARCO DE TELÉFONO CELULAR SMARTPHONE */
+                <div className="relative w-full h-full bg-slate-950 rounded-[40px] p-3.5 shadow-2xl border-4 border-slate-800 ring-4 ring-slate-200/50 flex flex-col overflow-hidden">
+                  
+                  {/* Notch / Bocina */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-slate-950 rounded-b-2xl z-30 flex items-center justify-center gap-1.5">
+                    <div className="w-12 h-1 bg-slate-800 rounded-full"></div>
+                    <div className="w-2.5 h-2.5 bg-slate-900 rounded-full border border-slate-800"></div>
+                  </div>
 
-              {/* CONTENEDOR DEL IFRAME DE SIMULACIÓN */}
-              <div className="flex-1 w-full h-full rounded-[26px] overflow-hidden bg-white relative">
-                <iframe 
-                  ref={iframeRef}
-                  title="Live Smartphone Invitation Simulation"
-                  className="w-full h-full border-0 select-none"
-                  id="preview-iframe"
-                />
-              </div>
+                  {/* CONTENEDOR DEL IFRAME DE SIMULACIÓN */}
+                  <div className="flex-1 w-full h-full rounded-[26px] overflow-hidden bg-white relative">
+                    <iframe 
+                      ref={iframeRef}
+                      title="Live Smartphone Invitation Simulation"
+                      className="w-full h-full border-0 select-none"
+                      id="preview-iframe"
+                    />
+                  </div>
 
-              {/* Botón Home Virtual del Smartphone */}
-              <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-800 rounded-full z-20"></div>
+                  {/* Botón Home Virtual del Smartphone */}
+                  <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-800 rounded-full z-20"></div>
+                </div>
+              )}
+
+              {previewDevice === "tablet" && (
+                /* MARCO DE TABLETA ELECTRÓNICA */
+                <div className="relative w-full h-full bg-slate-900 rounded-[32px] p-5 shadow-2xl border-4 border-slate-750 ring-4 ring-slate-200/30 flex flex-col overflow-hidden">
+                  
+                  {/* Cámara Frontal */}
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-950 rounded-full z-30 border border-slate-800"></div>
+
+                  {/* CONTENEDOR DEL IFRAME DE SIMULACIÓN */}
+                  <div className="flex-1 w-full h-full rounded-2xl overflow-hidden bg-white relative">
+                    <iframe 
+                      ref={iframeRef}
+                      title="Live Tablet Invitation Simulation"
+                      className="w-full h-full border-0 select-none"
+                      id="preview-iframe"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {previewDevice === "desktop" && (
+                /* CONTENEDOR ESTILO BROWSER WEB DESKTOP DE PC */
+                <div className="w-full h-full bg-white rounded-2xl shadow-xl border border-slate-200 flex flex-col overflow-hidden">
+                  
+                  {/* Barra superior del navegador ficticio */}
+                  <div className="bg-slate-50 border-b border-slate-200 px-4 py-2.5 flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-rose-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+                    </div>
+                    <div className="flex-1 max-w-lg bg-slate-200/60 rounded-lg px-3 py-1 flex items-center justify-between text-[11px] font-sans text-slate-500 font-medium">
+                      <span className="truncate">https://invitamx.com/xv-años/{datos.nombre?.toLowerCase().replace(/[^a-z0-9]/g, "-") || "quinceanera"}</span>
+                      <span className="text-[10px] text-emerald-600 font-bold">🔒 Seguro SSL</span>
+                    </div>
+                  </div>
+
+                  {/* CONTENEDOR DEL IFRAME DE SIMULACIÓN */}
+                  <div className="flex-1 w-full bg-white relative">
+                    <iframe 
+                      ref={iframeRef}
+                      title="Live Desktop Invitation Simulation"
+                      className="w-full h-full border-0"
+                      id="preview-iframe"
+                    />
+                  </div>
+                </div>
+              )}
 
             </div>
+          </div>
 
-            {/* BOTÓN PARA GUARDAR DISEÑO EN EL CATÁLOGO */}
-            <div className="w-full mt-4 px-2 flex flex-col items-center gap-2">
+          {/* BARRA INFERIOR DE ACCIONES DE VISTA PREVIA (FIRMADO Y CATÁLOGO DE ESTE TEMA) */}
+          <div className="bg-white border-t border-slate-200 p-4 shrink-0 flex flex-col items-center justify-center gap-2 z-10">
+            <div className="w-full max-w-md px-4 flex flex-col items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => {
@@ -2926,16 +3089,16 @@ export default function App() {
                 Guardar Diseño en Catálogo de este Tema 🌸
               </button>
 
-              <div className="flex items-center gap-2">
-                {tieneDiseñoGuardado ? (
-                  <span className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                    <span>✓</span> Diseño personalizado activo
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-slate-400 font-medium">
-                    Usando diseño predeterminado
-                  </span>
-                )}
+              <div className="flex items-center justify-between w-full text-[11px] text-slate-500 font-medium px-1">
+                <div className="flex items-center gap-1.5">
+                  {tieneDiseñoGuardado ? (
+                    <span className="text-emerald-600 font-bold flex items-center gap-1">
+                      <span>✓</span> Diseño personalizado activo
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">Usando diseño predeterminado</span>
+                  )}
+                </div>
 
                 {tieneDiseñoGuardado && (
                   <button
@@ -2955,7 +3118,7 @@ export default function App() {
                         mensaje: `¿Deseas eliminar tu diseño personalizado para el tema "${temaActual.nombre}" en el catálogo y volver al de fábrica?`
                       });
                     }}
-                    className="text-[10px] text-rose-500 hover:text-rose-700 transition font-bold underline cursor-pointer select-none"
+                    className="text-rose-500 hover:text-rose-700 transition font-bold underline cursor-pointer select-none"
                   >
                     Restablecer
                   </button>
@@ -2963,12 +3126,11 @@ export default function App() {
               </div>
             </div>
 
-            {/* Aviso breve */}
-            <p className="text-[10px] text-slate-500 font-medium text-center mt-3 leading-relaxed px-6">
-              La simulación representa cómo se verá el archivo HTML final en Safari y Chrome móvil. Toda animación y recurso multimedia está incluido.
+            <p className="text-[10px] text-slate-400 font-medium text-center leading-normal max-w-xl">
+              La simulación representa cómo se verá el archivo final según la pantalla. La música, animaciones de caída {datos.mostrarAnimacionCaida !== false ? '("ON")' : '("OFF")'} y efectos táctiles están incluidos.
             </p>
-
           </div>
+
         </section>
 
       </div>
