@@ -1923,7 +1923,10 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => {
-                          setIsCatalogMode(true);
+                          // Deferimos la actualización pesada del estado para mantener la interactividad instantánea (INP óptimo)
+                          setTimeout(() => {
+                            setIsCatalogMode(true);
+                          }, 0);
                         }}
                         className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer shadow-sm shadow-indigo-500/10 font-sans"
                       >
