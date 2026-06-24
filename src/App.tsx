@@ -259,6 +259,34 @@ async function guardarEnSupabase(datosInvitacion: InvitacionDatos, temaActual: T
   }
 }
 
+// Retorna los colores de vestimenta recomendados característicos de cada tema
+const getColorSugeridoPorTema = (temaId: string, tColors: any): string[] => {
+  if (temaId === "dorado-clasico") return ["#D4AF37", "#E9D295", "#FFFFFF"];
+  if (temaId === "mariposas") return ["#C299B5", "#E8D7E3", "#FFFFFF"];
+  if (temaId === "floral-acuarela") return ["#F1A7B4", "#FADCD9", "#FFFFFF"];
+  if (temaId === "celestial") return ["#1E293B", "#D4AF37", "#E2E8F0"];
+  if (temaId === "botanico") return ["#2D4A3E", "#A3B899", "#F1F5F9"];
+  if (temaId === "glam-rose") return ["#E0A899", "#F3DCD4", "#FFFFFF"];
+  if (temaId === "boho-chic") return ["#C87A53", "#E6C5B3", "#FDF6F0"];
+  if (temaId === "princesa-elegante") return ["#4A1D36", "#C39E82", "#FDF6F0"];
+  if (temaId === "marmol-oro") return ["#1E293B", "#D4AF37", "#F8FAFC"];
+  if (temaId === "neon") return ["#EC4899", "#06B6D4", "#E2E8F0"];
+  if (temaId === "coquette-pink") return ["#D9829B", "#F5D6DE", "#FFFFFF"];
+  if (temaId === "coquette-luxe") return ["#C66B8F", "#D4AF37", "#FBF8F3"];
+  return [tColors.primary, tColors.secondary, "#FFFFFF"];
+};
+
+// Genera un objeto de datos personalizado para el catálogo que garantiza que se muestren las características exactas del tema
+const getDatosCatalogTema = (baseDatos: any, t: any): any => {
+  const base = baseDatos || datosDefault.premium;
+  return {
+    ...base,
+    tema: t.id,
+    fotos: [], // Vaciamos para que use las hermosas fotos temáticas del tema
+    colorSugerido: getColorSugeridoPorTema(t.id, t.colors)
+  };
+};
+
 // Mapeo de IDs de secciones a nombres legibles en español con emojis
 const NOMBRES_SECCIONES: Record<string, string> = {
   apertura: "Pantalla de apertura 🎀",
@@ -993,7 +1021,7 @@ export default function App() {
             /* Render del Demo en vivo dentro de un iframe interactivo */
             <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-slate-200 overflow-hidden shadow-xl bg-white">
               <iframe
-                srcDoc={generarHTMLFinal({ ...datosDefault.premium, seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
+                srcDoc={generarHTMLFinal({ ...getDatosCatalogTema(datosDefault.premium, temas.find(t => t.id === selectedCatalogTemaId) || temas[0]), seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
                 className="w-full h-full border-0"
                 title="Invitación Demo en Vivo"
               />
@@ -1077,7 +1105,7 @@ export default function App() {
                             {/* Iframe minificado cargando el HTML final y ajustado exactamente al tamaño de la pantalla */}
                             <div className="w-full h-full overflow-hidden absolute inset-0 bg-slate-950">
                               <iframe 
-                                srcDoc={generarHTMLFinal({ ...(datos || datosDefault.premium), seccionesExcluidas: [...((datos || datosDefault.premium).seccionesExcluidas || []), "apertura"] }, t)}
+                                srcDoc={generarHTMLFinal({ ...getDatosCatalogTema(datos || datosDefault.premium, t), seccionesExcluidas: [...((datos || datosDefault.premium).seccionesExcluidas || []), "apertura"] }, t)}
                                 className="absolute border-0 pointer-events-none select-none"
                                 style={{
                                   width: "354px",
