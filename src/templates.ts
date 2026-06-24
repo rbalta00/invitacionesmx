@@ -566,7 +566,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     }
   </style>
 </head>
-<body class="theme-container min-h-screen text-textThemeDark selection:bg-primary/20 selection:text-accent">
+<body class="theme-container min-h-screen text-textThemeDark selection:bg-primary/20 selection:text-accent ${datos.seccionesExcluidas?.includes('apertura') ? 'experiencia-iniciada' : ''}">
 
   <!-- ==============================================
        1. SECCIÓN: APERTURA (TOCA PARA ENTRAR)

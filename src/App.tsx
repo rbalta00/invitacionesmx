@@ -291,7 +291,7 @@ const getDatosCatalogTema = (baseDatos: any, t: any): any => {
 };
 
 // Obtiene los datos del catálogo dando prioridad a diseños guardados por el usuario para cada tema específico
-const getDatosVisualizacionCatalog = (t: any): any => {
+const getDatosVisualizacionCatalog = (t: any, currentDatos?: any): any => {
   try {
     const saved = localStorage.getItem(`xv_diseño_guardado_tema_${t.id}`);
     if (saved) {
@@ -299,18 +299,32 @@ const getDatosVisualizacionCatalog = (t: any): any => {
       if (parsed && typeof parsed === "object") {
         return {
           ...parsed,
-          tema: t.id
+          tema: t.id,
+          bgImages: {
+            ...(parsed.bgImages || {}),
+            ...(currentDatos?.bgImages || {})
+          },
+          ...(currentDatos?.fotos && currentDatos.fotos.length > 0 ? { fotos: currentDatos.fotos } : {})
         };
       }
     }
   } catch (err) {
     console.error("Error al cargar diseño guardado del catálogo:", err);
   }
-  return getDatosCatalogTema(datosDefault.premium, t);
+  
+  const baseData = getDatosCatalogTema(datosDefault.premium, t);
+  return {
+    ...baseData,
+    bgImages: {
+      ...(baseData.bgImages || {}),
+      ...(currentDatos?.bgImages || {})
+    },
+    ...(currentDatos?.fotos && currentDatos.fotos.length > 0 ? { fotos: currentDatos.fotos } : {})
+  };
 };
 
 // Componente para cargar los iframes del catálogo de forma diferida (staggered), evitando bloquear el hilo principal (INP Issue)
-const LazyIframe = memo(({ t, index }: { t: any; index: number }) => {
+const LazyIframe = memo(({ t, index, datos }: { t: any; index: number; datos: any }) => {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
@@ -322,8 +336,8 @@ const LazyIframe = memo(({ t, index }: { t: any; index: number }) => {
 
   const srcDoc = useMemo(() => {
     if (!shouldRender) return "";
-    return generarHTMLFinal({ ...getDatosVisualizacionCatalog(t), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t).seccionesExcluidas || []), "apertura"] }, t);
-  }, [shouldRender, t]);
+    return generarHTMLFinal({ ...getDatosVisualizacionCatalog(t, datos), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t, datos).seccionesExcluidas || []), "apertura"] }, t);
+  }, [shouldRender, t, datos]);
 
   if (!shouldRender) {
     return (
@@ -841,7 +855,8 @@ export default function App() {
     ) {
       appUrl = "https://generadorpruebaxv1.vercel.app/";
     }
-    return `${appUrl}?catalog=true`;
+    const stateStr = encodeState(datos);
+    return `${appUrl}?catalog=true${stateStr ? `&d=${stateStr}` : ''}`;
   };
 
   // Generar URL de compartir con todos los datos y el invitado seleccionado
@@ -1219,7 +1234,7 @@ export default function App() {
             /* Render del Demo en vivo dentro de un iframe interactivo */
             <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-slate-200 overflow-hidden shadow-xl bg-white">
               <iframe
-                srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(temas.find(t => t.id === selectedCatalogTemaId) || temas[0]), seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
+                srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(temas.find(t => t.id === selectedCatalogTemaId) || temas[0], datos), seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
                 className="w-full h-full border-0"
                 title="Invitación Demo en Vivo"
               />
@@ -1305,7 +1320,7 @@ export default function App() {
 
                             {/* Iframe minificado cargando el HTML final y ajustado exactamente al tamaño de la pantalla */}
                             <div className="w-full h-full overflow-hidden absolute inset-0 bg-white">
-                              <LazyIframe t={t} index={idx} />
+                              <LazyIframe t={t} index={idx} datos={datos} />
                             </div>
                           </div>
                         </div>
