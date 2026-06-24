@@ -216,7 +216,7 @@ const decodeState = (str: string): any => {
   }
 };
 // Función para guardar en Supabase (agregar ANTES de export default function App)
-async function guardarEnSupabase(datosInvitacion: InvitacionDatos, temaActual: TemaConfig) {
+async function guardarEnSupabase(datosInvitacion: InvitacionDatos, temaActual: TemaConfig, shareUrl?: string) {
   try {
     // Verificar que Supabase esté cargado
     if (!window.supabaseClient) {
@@ -241,7 +241,7 @@ async function guardarEnSupabase(datosInvitacion: InvitacionDatos, temaActual: T
       nombre_mama: (datosInvitacion.padres && datosInvitacion.padres[1]) || '',
       telefono_whatsapp: datosInvitacion.whatsappConfirmacion || '',
       email_cliente: '',
-      link_invitacion: window.location.href,
+      link_invitacion: shareUrl || window.location.href,
       estado: 'completada'
     };
 
@@ -1495,15 +1495,17 @@ export default function App() {
             <span>Descargar index.html</span>
           </button>
 
-                    <button
-                                onClick={() => guardarEnSupabase(datos, temaActual)
-                                              .then(() => mostrarToast('✅ Guardado en Supabase', 'success'))
-                                                            .catch(() => mostrarToast('❌ Error al guardar', 'error'))
-                                                                        }
-                                                                                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                                                                                              >
-                                                                                                          <span>💾 Guardar en Supabase</span>
-                                                                                                                    </button>
+          <button
+            onClick={() => {
+              const finalLink = getShareUrl();
+              guardarEnSupabase(datos, temaActual, finalLink)
+                .then(() => mostrarToast('✅ Guardado en Supabase correctamente', 'success'))
+                .catch(() => mostrarToast('❌ Error al guardar', 'error'));
+            }}
+            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+          >
+            <span>💾 Guardar en Supabase</span>
+          </button>
         </div>
       </header>
 
