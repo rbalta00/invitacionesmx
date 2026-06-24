@@ -322,10 +322,10 @@ const LazyIframe = ({ t, index }: { t: any; index: number }) => {
 
   if (!shouldRender) {
     return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-white select-none pointer-events-none">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-slate-800 select-none pointer-events-none">
         <div className="animate-pulse flex flex-col items-center gap-1.5">
-          <div className="w-5 h-5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-          <span className="text-[8px] text-indigo-200/80 font-bold uppercase tracking-widest">Cargando...</span>
+          <div className="w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+          <span className="text-[8px] text-indigo-650/80 font-bold uppercase tracking-widest">Cargando...</span>
         </div>
       </div>
     );
@@ -1274,29 +1274,29 @@ export default function App() {
                         />
 
                         {/* Maqueta del Celular Realista */}
-                        <div className="relative z-10 w-[128px] h-[224px] bg-slate-900 rounded-[28px] p-[3px] border-[2px] border-slate-800 shadow-[0_10px_25px_-5px_rgba(15,23,42,0.12),0_8px_16px_-6px_rgba(15,23,42,0.08)] flex flex-col transition-all duration-300 group-hover:scale-105 group-hover:border-slate-700 group-hover:shadow-[0_16px_36px_-8px_rgba(99,102,241,0.2),0_6px_14px_rgba(15,23,42,0.1)]">
+                        <div className="relative z-10 w-[128px] h-[224px] bg-slate-100 rounded-[28px] p-[3px] border-[2px] border-slate-300 shadow-[0_10px_25px_-5px_rgba(15,23,42,0.12),0_8px_16px_-6px_rgba(15,23,42,0.08)] flex flex-col transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-300 group-hover:shadow-[0_16px_36px_-8px_rgba(99,102,241,0.2),0_6px_14px_rgba(15,23,42,0.1)]">
                           
                           {/* Botones físicos laterales simulados */}
-                          <div className="absolute top-10 -left-[2.5px] w-[2.5px] h-6 bg-slate-700 rounded-l transition-colors duration-300 group-hover:bg-slate-600" />
-                          <div className="absolute top-18 -left-[2.5px] w-[2.5px] h-6 bg-slate-700 rounded-l transition-colors duration-300 group-hover:bg-slate-600" />
-                          <div className="absolute top-14 -right-[2.5px] w-[2.5px] h-10 bg-slate-700 rounded-r transition-colors duration-300 group-hover:bg-slate-600" />
+                          <div className="absolute top-10 -left-[2.5px] w-[2.5px] h-6 bg-slate-300 rounded-l transition-colors duration-300 group-hover:bg-indigo-300" />
+                          <div className="absolute top-18 -left-[2.5px] w-[2.5px] h-6 bg-slate-300 rounded-l transition-colors duration-300 group-hover:bg-indigo-300" />
+                          <div className="absolute top-14 -right-[2.5px] w-[2.5px] h-10 bg-slate-300 rounded-r transition-colors duration-300 group-hover:bg-indigo-300" />
 
                           {/* Pantalla del celular */}
-                          <div className="w-full h-full rounded-[24px] bg-slate-950 overflow-hidden relative border border-slate-850 flex items-center justify-center">
+                          <div className="w-full h-full rounded-[24px] bg-white overflow-hidden relative border border-slate-200 flex items-center justify-center">
                             
                             {/* Isla Dinámica / Muesca superior */}
-                            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-11 h-2.5 bg-black rounded-full z-20 flex items-center justify-start px-1 shadow-inner">
-                              <span className="w-1 h-1 rounded-full bg-slate-900 block opacity-80" />
+                            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-11 h-2.5 bg-slate-200 rounded-full z-20 flex items-center justify-start px-1 shadow-inner">
+                              <span className="w-1 h-1 rounded-full bg-slate-400 block opacity-80" />
                             </div>
 
                             {/* Ranura del Auricular de llamadas */}
-                            <div className="absolute top-[1.5px] left-1/2 -translate-x-1/2 w-3 h-[0.75px] bg-slate-800/90 rounded-full z-20" />
+                            <div className="absolute top-[1.5px] left-1/2 -translate-x-1/2 w-3 h-[0.75px] bg-slate-300 rounded-full z-20" />
 
                             {/* Barra de inicio / Swipe Bar inferior (iOS Style) */}
-                            <div className="absolute bottom-1 w-8 h-0.5 bg-white/40 rounded-full left-1/2 -translate-x-1/2 z-20 shadow-xs" />
+                            <div className="absolute bottom-1 w-8 h-0.5 bg-slate-400/50 rounded-full left-1/2 -translate-x-1/2 z-20 shadow-xs" />
 
                             {/* Iframe minificado cargando el HTML final y ajustado exactamente al tamaño de la pantalla */}
-                            <div className="w-full h-full overflow-hidden absolute inset-0 bg-slate-950">
+                            <div className="w-full h-full overflow-hidden absolute inset-0 bg-white">
                               <LazyIframe t={t} index={idx} />
                             </div>
                           </div>
@@ -2994,12 +2994,12 @@ export default function App() {
               
               {previewDevice === "mobile" && (
                 /* MARCO DE TELÉFONO CELULAR SMARTPHONE */
-                <div className="relative w-full h-full bg-slate-950 rounded-[40px] p-3.5 shadow-2xl border-4 border-slate-800 ring-4 ring-slate-200/50 flex flex-col overflow-hidden">
+                <div className="relative w-full h-full bg-slate-100 rounded-[40px] p-3.5 shadow-2xl border-4 border-slate-300 ring-4 ring-slate-200/50 flex flex-col overflow-hidden">
                   
                   {/* Notch / Bocina */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-slate-950 rounded-b-2xl z-30 flex items-center justify-center gap-1.5">
-                    <div className="w-12 h-1 bg-slate-800 rounded-full"></div>
-                    <div className="w-2.5 h-2.5 bg-slate-900 rounded-full border border-slate-800"></div>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-6 bg-slate-200 rounded-b-2xl z-30 flex items-center justify-center gap-1.5 border-b border-x border-slate-300">
+                    <div className="w-12 h-1 bg-slate-400 rounded-full"></div>
+                    <div className="w-2.5 h-2.5 bg-slate-300 rounded-full border border-slate-400"></div>
                   </div>
 
                   {/* CONTENEDOR DEL IFRAME DE SIMULACIÓN */}
@@ -3013,16 +3013,16 @@ export default function App() {
                   </div>
 
                   {/* Botón Home Virtual del Smartphone */}
-                  <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-800 rounded-full z-20"></div>
+                  <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-400 rounded-full z-20"></div>
                 </div>
               )}
 
               {previewDevice === "tablet" && (
                 /* MARCO DE TABLETA ELECTRÓNICA */
-                <div className="relative w-full h-full bg-slate-900 rounded-[32px] p-5 shadow-2xl border-4 border-slate-750 ring-4 ring-slate-200/30 flex flex-col overflow-hidden">
+                <div className="relative w-full h-full bg-slate-100 rounded-[32px] p-5 shadow-2xl border-4 border-slate-300 ring-4 ring-slate-200/30 flex flex-col overflow-hidden">
                   
                   {/* Cámara Frontal */}
-                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-950 rounded-full z-30 border border-slate-800"></div>
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-300 rounded-full z-30 border border-slate-400"></div>
 
                   {/* CONTENEDOR DEL IFRAME DE SIMULACIÓN */}
                   <div className="flex-1 w-full h-full rounded-2xl overflow-hidden bg-white relative">

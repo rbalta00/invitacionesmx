@@ -1160,17 +1160,17 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
         
         const startX = Math.random() * 100; // porcentaje
         const startY = -5; // arriba de la pantalla
-        const size = Math.random() * 20 + 10; // entre 10px y 30px
-        const duration = Math.random() * 8 + 6; // velocidad entre 6s y 14s
-        const delay = Math.random() * 5; // retraso de inicio
-        const opacity = Math.random() * 0.5 + 0.4; // entre 0.4 y 0.9
+        const size = Math.random() * 12 + 8; // más pequeñas y sutiles (entre 8px y 20px)
+        const duration = Math.random() * 10 + 12; // caen más lento y suave (entre 12s y 22s)
+        const delay = Math.random() * 6; // retraso de inicio distribuido
+        const opacity = Math.random() * 0.3 + 0.15; // opacidad más tenue y elegante (entre 0.15 y 0.45)
 
         p.style.position = 'absolute';
         p.style.top = startY + 'vh';
         p.style.left = startX + 'vw';
         p.style.fontSize = size + 'px';
         p.style.opacity = opacity.toString();
-        p.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.15))';
+        p.style.filter = 'drop-shadow(0 2px 5px rgba(0,0,0,0.1))';
         p.style.animation = "fallAndSway " + duration + "s linear " + delay + "s infinite";
         
         container.appendChild(p);
@@ -1181,19 +1181,19 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
         }, (duration + delay) * 1000);
       }
 
-      // Generar lote inicial de partículas
-      for (let i = 0; i < 25; i++) {
+      // Generar lote inicial de partículas más reducido para que sea sutil
+      for (let i = 0; i < 12; i++) {
         crearParticula();
       }
 
-      // Seguir generando partículas cada cierto tiempo
+      // Seguir generando partículas a un ritmo más pausado
       const interval = setInterval(() => {
         if (!document.getElementById('particle-container')) {
           clearInterval(interval);
           return;
         }
         crearParticula();
-      }, 400);
+      }, 950);
     }
 
     function toggleMusic() {
