@@ -306,6 +306,45 @@ const getDatosVisualizacionCatalog = (t: any): any => {
   return getDatosCatalogTema(datosDefault.premium, t);
 };
 
+// Componente para cargar los iframes del catálogo de forma diferida (staggered), evitando bloquear el hilo principal (INP Issue)
+const LazyIframe = ({ t, index }: { t: any; index: number }) => {
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShouldRender(true);
+    }, 150 + index * 80); // Carga escalonada ligera y fluida
+    return () => clearTimeout(timer);
+  }, [t.id, index]);
+
+  if (!shouldRender) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-white select-none pointer-events-none">
+        <div className="animate-pulse flex flex-col items-center gap-1.5">
+          <div className="w-5 h-5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+          <span className="text-[8px] text-indigo-200/80 font-bold uppercase tracking-widest">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <iframe 
+      srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(t), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t).seccionesExcluidas || []), "apertura"] }, t)}
+      className="absolute border-0 pointer-events-none select-none"
+      style={{
+        width: "354px",
+        height: "642px",
+        transform: "scale(0.333333)",
+        transformOrigin: "top left",
+        top: "0",
+        left: "0",
+      }}
+      title={`Demo ${t.nombre}`}
+    />
+  );
+};
+
 // Mapeo de IDs de secciones a nombres legibles en español con emojis
 const NOMBRES_SECCIONES: Record<string, string> = {
   apertura: "Pantalla de apertura 🎀",
@@ -342,12 +381,29 @@ export default function App() {
       const initialCatalogTemaId = params.get("tema") || null;
       let targetTema = params.get("tema") || "mariposas";
 
+      // Intentar cargar fondos persistentes locales
+      let customBgs = {};
+      try {
+        const savedBgs = localStorage.getItem('xv_fondos_personalizados');
+        if (savedBgs) {
+          customBgs = JSON.parse(savedBgs);
+        }
+      } catch (e) {
+        console.error("Error al leer xv_fondos_personalizados:", e);
+      }
+
       const d = params.get("d");
       if (d) {
         const decoded = decodeState(d);
         if (decoded && typeof decoded === "object") {
           return {
-            initialDatos: decoded,
+            initialDatos: {
+              ...decoded,
+              bgImages: {
+                ...customBgs,
+                ...(decoded.bgImages || {})
+              }
+            },
             initialTemaId: decoded.tema || targetTema,
             isView,
             isCatalog,
@@ -363,7 +419,13 @@ export default function App() {
           const parsed = JSON.parse(saved);
           if (parsed && typeof parsed === "object") {
             return {
-              initialDatos: parsed,
+              initialDatos: {
+                ...parsed,
+                bgImages: {
+                  ...customBgs,
+                  ...(parsed.bgImages || {})
+                }
+              },
               initialTemaId: parsed.tema || targetTema,
               isView,
               isCatalog,
@@ -376,15 +438,30 @@ export default function App() {
       }
 
       return {
-        initialDatos: { ...datosDefault.premium },
+        initialDatos: { 
+          ...datosDefault.premium,
+          bgImages: {
+            ...customBgs
+          }
+        },
         initialTemaId: targetTema,
         isView,
         isCatalog,
         initialCatalogTemaId
       };
     } catch (e) {
+      let customBgs = {};
+      try {
+        const savedBgs = localStorage.getItem('xv_fondos_personalizados');
+        if (savedBgs) customBgs = JSON.parse(savedBgs);
+      } catch (err) {}
       return {
-        initialDatos: { ...datosDefault.premium },
+        initialDatos: { 
+          ...datosDefault.premium,
+          bgImages: {
+            ...customBgs
+          }
+        },
         initialTemaId: "mariposas",
         isView: false,
         isCatalog: false,
@@ -487,6 +564,17 @@ export default function App() {
     setSubiendoCloudinary(true);
     try {
       const url = await subirACloudinary(file);
+      
+      // Guardar en el almacenamiento persistente global de fondos
+      try {
+        const savedBgs = localStorage.getItem('xv_fondos_personalizados');
+        const customBgs = savedBgs ? JSON.parse(savedBgs) : {};
+        customBgs[selectedTemaId] = url;
+        localStorage.setItem('xv_fondos_personalizados', JSON.stringify(customBgs));
+      } catch (err) {
+        console.error("Error al guardar fondo personalizado en localStorage:", err);
+      }
+
       setDatos(prev => {
         const currentBgImages = prev.bgImages || {};
         return {
@@ -507,6 +595,16 @@ export default function App() {
   };
 
   const handleBgImageUrlChange = (url: string) => {
+    // Guardar en el almacenamiento persistente global de fondos
+    try {
+      const savedBgs = localStorage.getItem('xv_fondos_personalizados');
+      const customBgs = savedBgs ? JSON.parse(savedBgs) : {};
+      customBgs[selectedTemaId] = url;
+      localStorage.setItem('xv_fondos_personalizados', JSON.stringify(customBgs));
+    } catch (err) {
+      console.error("Error al guardar fondo personalizado en localStorage:", err);
+    }
+
     setDatos(prev => {
       const currentBgImages = prev.bgImages || {};
       return {
@@ -520,6 +618,18 @@ export default function App() {
   };
 
   const handleClearBgImage = () => {
+    // Eliminar del almacenamiento persistente global de fondos
+    try {
+      const savedBgs = localStorage.getItem('xv_fondos_personalizados');
+      if (savedBgs) {
+        const customBgs = JSON.parse(savedBgs);
+        delete customBgs[selectedTemaId];
+        localStorage.setItem('xv_fondos_personalizados', JSON.stringify(customBgs));
+      }
+    } catch (err) {
+      console.error("Error al limpiar fondo de localStorage:", err);
+    }
+
     setDatos(prev => {
       const currentBgImages = { ...(prev.bgImages || {}) };
       delete currentBgImages[selectedTemaId];
@@ -1095,7 +1205,7 @@ export default function App() {
             /* Listado de tarjetas de catálogo de todos los temas */
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {temas.map((t) => {
+                {temas.map((t, idx) => {
                   const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante" || t.id === "neon";
                   let descripcion = "Un diseño lujoso y resplandeciente.";
                   if (t.id === "dorado-clasico") descripcion = "Tradicional, majestuoso, elegante. Con detalles dorados clásicos e impecables decoraciones heráldicas ⚜️";
@@ -1169,20 +1279,7 @@ export default function App() {
 
                             {/* Iframe minificado cargando el HTML final y ajustado exactamente al tamaño de la pantalla */}
                             <div className="w-full h-full overflow-hidden absolute inset-0 bg-slate-950">
-                              <iframe 
-                                srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(t), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t).seccionesExcluidas || []), "apertura"] }, t)}
-                                className="absolute border-0 pointer-events-none select-none"
-                                style={{
-                                  width: "354px",
-                                  height: "642px",
-                                  transform: "scale(0.333333)",
-                                  transformOrigin: "top left",
-                                  top: "0",
-                                  left: "0"
-                                }}
-                                title={`Mini-vista ${t.nombre}`}
-                                loading="lazy"
-                              />
+                              <LazyIframe t={t} index={idx} />
                             </div>
                           </div>
                         </div>
