@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useEffect, useRef, ChangeEvent, useMemo, memo } from "react";
 import { 
   Sparkles, 
   Settings, 
@@ -310,7 +310,7 @@ const getDatosVisualizacionCatalog = (t: any): any => {
 };
 
 // Componente para cargar los iframes del catálogo de forma diferida (staggered), evitando bloquear el hilo principal (INP Issue)
-const LazyIframe = ({ t, index }: { t: any; index: number }) => {
+const LazyIframe = memo(({ t, index }: { t: any; index: number }) => {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
@@ -319,6 +319,11 @@ const LazyIframe = ({ t, index }: { t: any; index: number }) => {
     }, 150 + index * 80); // Carga escalonada ligera y fluida
     return () => clearTimeout(timer);
   }, [t.id, index]);
+
+  const srcDoc = useMemo(() => {
+    if (!shouldRender) return "";
+    return generarHTMLFinal({ ...getDatosVisualizacionCatalog(t), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t).seccionesExcluidas || []), "apertura"] }, t);
+  }, [shouldRender, t]);
 
   if (!shouldRender) {
     return (
@@ -333,7 +338,7 @@ const LazyIframe = ({ t, index }: { t: any; index: number }) => {
 
   return (
     <iframe 
-      srcDoc={generarHTMLFinal({ ...getDatosVisualizacionCatalog(t), seccionesExcluidas: [...(getDatosVisualizacionCatalog(t).seccionesExcluidas || []), "apertura"] }, t)}
+      srcDoc={srcDoc}
       className="absolute border-0 pointer-events-none select-none"
       style={{
         width: "354px",
@@ -346,7 +351,7 @@ const LazyIframe = ({ t, index }: { t: any; index: number }) => {
       title={`Demo ${t.nombre}`}
     />
   );
-};
+});
 
 // Mapeo de IDs de secciones a nombres legibles en español con emojis
 const NOMBRES_SECCIONES: Record<string, string> = {
@@ -1225,6 +1230,9 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {temas.map((t, idx) => {
                   const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante" || t.id === "neon";
+                  const isVisorOscuro = t.id === "celestial" || t.id === "neon";
+                  const lightBgColor = isVisorOscuro ? '#f8fafc' : (t.colors.light || '#f8fafc');
+                  const lightBgEnd = isVisorOscuro ? '#e2e8f0' : (t.colors.bg || '#f1f5f9');
                   let descripcion = "Un diseño lujoso y resplandeciente.";
                   if (t.id === "dorado-clasico") descripcion = "Tradicional, majestuoso, elegante. Con detalles dorados clásicos e impecables decoraciones heráldicas ⚜️";
                   if (t.id === "mariposas") descripcion = "Mágico, etéreo y romántico. Cascadas de hermosas mariposas revoloteando sobre una tipografía artesanal 🦋";
@@ -1243,13 +1251,13 @@ export default function App() {
                       className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col h-full"
                     >
                       {/* Cabecera visual del tema + Mini Vista Previa Interactiva en Vivo en forma de Celular */}
-                      <div className="relative h-64 overflow-hidden border-b border-slate-150 group flex items-center justify-center select-none" style={{ backgroundColor: t.colors.light || '#f8fafc' }}>
+                      <div className="relative h-64 overflow-hidden border-b border-slate-150 group flex items-center justify-center select-none" style={{ backgroundColor: lightBgColor }}>
                         
                         {/* Fondo de estudio decorativo claro adaptado al color de fondo y primario del tema */}
                         <div 
                           className="absolute inset-0 transition-colors duration-500" 
                           style={{
-                            background: `radial-gradient(circle at 50% 50%, ${(t.colors.primary || '#6366f1')}15 0%, ${(t.colors.light || '#f8fafc')} 70%, ${(t.colors.bg || '#f1f5f9')} 100%)`
+                            background: `radial-gradient(circle at 50% 50%, ${(t.colors.primary || '#6366f1')}15 0%, ${lightBgColor} 70%, ${lightBgEnd} 100%)`
                           }}
                         />
                         <div className="absolute inset-x-0 top-0 h-[1px] bg-slate-200/40" />
