@@ -343,7 +343,7 @@ const LazyIframe = memo(({ t, index }: { t: any; index: number }) => {
       style={{
         width: "354px",
         height: "642px",
-        transform: "scale(0.333333)",
+        transform: "scale(0.404)",
         transformOrigin: "top left",
         top: "0",
         left: "0",
@@ -1251,7 +1251,7 @@ export default function App() {
                       className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col h-full"
                     >
                       {/* Cabecera visual del tema + Mini Vista Previa Interactiva en Vivo en forma de Celular */}
-                      <div className="relative h-64 overflow-hidden border-b border-slate-150 group flex items-center justify-center select-none" style={{ backgroundColor: lightBgColor }}>
+                      <div className="relative h-80 overflow-hidden border-b border-slate-150 group flex items-center justify-center select-none" style={{ backgroundColor: lightBgColor }}>
                         
                         {/* Fondo de estudio decorativo claro adaptado al color de fondo y primario del tema */}
                         <div 
@@ -1282,12 +1282,12 @@ export default function App() {
                         />
 
                         {/* Maqueta del Celular Realista */}
-                        <div className="relative z-10 w-[128px] h-[224px] bg-slate-100 rounded-[28px] p-[3px] border-[2px] border-slate-300 shadow-[0_10px_25px_-5px_rgba(15,23,42,0.12),0_8px_16px_-6px_rgba(15,23,42,0.08)] flex flex-col transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-300 group-hover:shadow-[0_16px_36px_-8px_rgba(99,102,241,0.2),0_6px_14px_rgba(15,23,42,0.1)]">
+                        <div className="relative z-10 w-[154px] h-[262px] bg-slate-100 rounded-[28px] p-[3.5px] border-[2px] border-slate-300 shadow-[0_12px_30px_-5px_rgba(15,23,42,0.15),0_8px_16px_-6px_rgba(15,23,42,0.1)] flex flex-col transition-all duration-300 group-hover:scale-105 group-hover:border-indigo-300 group-hover:shadow-[0_18px_38px_-8px_rgba(99,102,241,0.22),0_8px_18px_rgba(15,23,42,0.12)]">
                           
                           {/* Botones físicos laterales simulados */}
-                          <div className="absolute top-10 -left-[2.5px] w-[2.5px] h-6 bg-slate-300 rounded-l transition-colors duration-300 group-hover:bg-indigo-300" />
-                          <div className="absolute top-18 -left-[2.5px] w-[2.5px] h-6 bg-slate-300 rounded-l transition-colors duration-300 group-hover:bg-indigo-300" />
-                          <div className="absolute top-14 -right-[2.5px] w-[2.5px] h-10 bg-slate-300 rounded-r transition-colors duration-300 group-hover:bg-indigo-300" />
+                          <div className="absolute top-12 -left-[2.5px] w-[2.5px] h-6 bg-slate-300 rounded-l transition-colors duration-300 group-hover:bg-indigo-300" />
+                          <div className="absolute top-20 -left-[2.5px] w-[2.5px] h-6 bg-slate-300 rounded-l transition-colors duration-300 group-hover:bg-indigo-300" />
+                          <div className="absolute top-16 -right-[2.5px] w-[2.5px] h-10 bg-slate-300 rounded-r transition-colors duration-300 group-hover:bg-indigo-300" />
 
                           {/* Pantalla del celular */}
                           <div className="w-full h-full rounded-[24px] bg-white overflow-hidden relative border border-slate-200 flex items-center justify-center">

@@ -423,7 +423,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
       content: "";
       position: fixed;
       inset: 0;
-      background: ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(10, 8, 20, 0.45)" : "rgba(255, 255, 255, 0.45)"};
+      background: ${tema.id === "celestial" || tema.id === "neon" ? "rgba(8, 6, 16, 0.65)" : "rgba(255, 255, 255, 0.55)"};
       pointer-events: none;
       z-index: 1;
     }
@@ -438,12 +438,28 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
     .theme-container .gold-card,
     .theme-container [data-section] > .bg-white,
     .theme-container [data-section] > .rounded-3xl {
-      background-color: ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(17, 27, 48, 0.65)" : "rgba(255, 255, 255, 0.75)"} !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      border: 1px solid ${tema.id === "celestial" || tema.id === "princesa-elegante" ? "rgba(255,255,255,0.15)" : "rgba(255, 255, 255, 0.5)"} !important;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+      background-color: ${tema.id === "celestial" || tema.id === "neon" ? "rgba(15, 23, 42, 0.90)" : "rgba(255, 255, 255, 0.93)"} !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid ${tema.id === "celestial" || tema.id === "neon" ? "rgba(255,255,255,0.18)" : "rgba(255, 255, 255, 0.65)"} !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
     }
+
+    /* Soporte de accesibilidad y alto contraste para Temas Oscuros en textos grises */
+    ${tema.id === "celestial" || tema.id === "neon" ? `
+    .theme-container {
+      color: #f1f5f9 !important;
+    }
+    .theme-container .text-gray-800 { color: #f8fafc !important; }
+    .theme-container .text-gray-700 { color: #f1f5f9 !important; }
+    .theme-container .text-gray-600 { color: #cbd5e1 !important; }
+    .theme-container .text-gray-500 { color: #94a3b8 !important; }
+    .theme-container .text-gray-400 { color: #cbd5e1 !important; }
+    .theme-container .text-gray-300 { color: #94a3b8 !important; }
+    .theme-container .bg-gray-50 { background-color: rgba(30, 41, 59, 0.4) !important; color: #f1f5f9 !important; border-color: rgba(255,255,255,0.1) !important; }
+    .theme-container input, .theme-container select { background-color: rgba(30, 41, 59, 0.6) !important; color: #ffffff !important; border-color: rgba(255,255,255,0.2) !important; }
+    .theme-container input::placeholder { color: #94a3b8 !important; }
+    ` : ""}
     ` : ""}
 
     /* Ocultar/Apagar cajas del fondo de los textos de las secciones si el cliente lo prefiere */
