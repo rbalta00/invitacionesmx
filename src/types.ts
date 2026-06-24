@@ -40,6 +40,7 @@ export interface InvitacionDatos {
     pases: number;
   }>;
   bgImages?: Record<string, string>;
+  seccionesExcluidas?: string[];
 }
 
 export interface PaqueteConfig {

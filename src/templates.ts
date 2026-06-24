@@ -11,8 +11,8 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
   const maxFotosPermitidas = configPaquete.maxFotos;
   const fotosFiltradas = listadoFotos.slice(0, maxFotosPermitidas);
 
-  // Generamos el listado de secciones del paquete para incluirlas en la validación
-  const seccionesActivas = configPaquete.secciones;
+  // Generamos el listado de secciones del paquete, excluyendo las que el usuario haya desactivado manualmente
+  const seccionesActivas = configPaquete.secciones.filter(sec => !datos.seccionesExcluidas?.includes(sec));
 
   // Generamos los items del itinerario
   const itinerarioHTML = (datos.itinerario || [])
@@ -77,7 +77,7 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
 
   let aperturaHTML = "";
   if (isSectionActive("apertura")) {
-    if (["mariposas", "floral-acuarela", "boho-chic", "coquette-pink"].includes(tema.id)) {
+    if (["mariposas", "floral-acuarela", "boho-chic", "coquette-pink", "coquette-luxe"].includes(tema.id)) {
       aperturaHTML = `
   <div id="pantalla-apertura" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 transition-all duration-1000" style="background: ${tema.bgGradient};" onclick="comenzarExperienciaEnvoltura()">
     <style>
@@ -997,6 +997,12 @@ export function generarHTMLFinal(datos: InvitacionDatos, tema: TemaConfig): stri
         }
       } catch (err) {
         console.warn("Error auto-buscando pase:", err);
+      }
+
+      // Si no hay pantalla de apertura, mostrar el reproductor de música de inmediato
+      if (!document.getElementById('pantalla-apertura')) {
+        const sw = document.getElementById('music-widget');
+        if (sw) sw.classList.remove('hidden');
       }
     });
 

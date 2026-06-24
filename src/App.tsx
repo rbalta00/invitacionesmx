@@ -51,7 +51,8 @@ const KEY_MAP: Record<string, string> = {
   linkPersonalizado: "l",
   invitados: "v",
   fotoPortada: "fp",
-  mostrarFotoPortada: "mfp"
+  mostrarFotoPortada: "mfp",
+  seccionesExcluidas: "se"
 };
 
 const SUB_KEY_MAP: Record<string, string> = {
@@ -211,8 +212,80 @@ const decodeState = (str: string): any => {
     return null;
   }
 };
+// Función para guardar en Supabase (agregar ANTES de export default function App)
+async function guardarEnSupabase(datosInvitacion: InvitacionDatos, temaActual: TemaConfig) {
+  try {
+    // Verificar que Supabase esté cargado
+    if (!window.supabaseClient) {
+      console.error('Supabase no está inicializado');
+      return;
+    }
 
-async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
+    const supabase = window.supabaseClient;
+
+    const datosParaGuardar = {
+      nombre_quinceanera: datosInvitacion.nombre || 'Sin nombre',
+      apellido_quinceanera: '',
+      edad: null,
+      fecha_fiesta: datosInvitacion.fecha || null,
+      hora_fiesta: null,
+      lugar_fiesta: datosInvitacion.ceremonia?.lugar || '',
+      foto_portada_url: datosInvitacion.fotoPortada || '',
+      foto_galeria_urls: datosInvitacion.fotos || [],
+      foto_familia_url: '',
+      tema_elegido: temaActual.id,
+      nombre_papa: (datosInvitacion.padres && datosInvitacion.padres[0]) || '',
+      nombre_mama: (datosInvitacion.padres && datosInvitacion.padres[1]) || '',
+      telefono_whatsapp: datosInvitacion.whatsappConfirmacion || '',
+      email_cliente: '',
+      link_invitacion: window.location.href,
+      estado: 'completada'
+    };
+
+    console.log('📤 Guardando en Supabase:', datosParaGuardar);
+
+    const { data, error } = await supabase
+      .from('invitaciones')
+      .insert([datosParaGuardar])
+      .select();
+
+    if (error) throw error;
+
+    console.log('✅ Guardado en Supabase correctamente:', data[0]?.id);
+    return data[0];
+
+  } catch (err: any) {
+    console.error('❌ Error al guardar en Supabase:', err.message);
+  }
+}
+
+// Mapeo de IDs de secciones a nombres legibles en español con emojis
+const NOMBRES_SECCIONES: Record<string, string> = {
+  apertura: "Pantalla de apertura 🎀",
+  portada: "Portada principal 🏰",
+  cuenta: "Cuenta regresiva ⏳",
+  mensaje: "Mensaje / Frase de bienvenida ✍️",
+  ceremonia: "Ubicación de Ceremonia ⛪",
+  recepcion: "Ubicación de Recepción 🏨",
+  itinerario: "Itinerario / Programa 🗓️",
+  vestimenta: "Código de Vestimenta 👗",
+  familia: "Padres y Padrinos 👨‍👩‍👧",
+  regalos: "Mesa de Regalos & Datos Bancarios 🎁",
+  galeria: "Galería de Fotos 📸",
+  hashtag: "Hashtag de Instagram 📱",
+  calendario: "Añadir a Calendario 📅",
+  pases: "Control de pases de invitados 🎟️",
+  confirmacion: "Confirmación (RSVP) 💬",
+  cierre: "Mensaje de cierre 🌸"
+};
+
+// Declarar tipo global para Supabase
+declare global {
+  interface Window {
+    supabaseClient?: any;
+  }
+}
+export default function App() {
   // Cargar estado inicial desde la URL si existe para la vista compartida o el editor precargado
   const getInitialState = (): { initialDatos: InvitacionDatos; initialTemaId: string; isView: boolean; isCatalog: boolean; initialCatalogTemaId: string | null } => {
     try {
@@ -270,6 +343,20 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
 
   const mostrarToast = (mensaje: string, tipo: "success" | "error" | "info" = "success") => {
     setToast({ mensaje, tipo });
+  };
+
+  const toggleSeccion = (secName: string) => {
+    const ex = datos.seccionesExcluidas || [];
+    let newEx: string[];
+    if (ex.includes(secName)) {
+      newEx = ex.filter(s => s !== secName);
+    } else {
+      newEx = [...ex, secName];
+    }
+    setDatos({
+      ...datos,
+      seccionesExcluidas: newEx
+    });
   };
 
   useEffect(() => {
@@ -894,7 +981,7 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
                 Catálogo de Invitaciones Digitales Interactivas
               </h1>
               <p className="text-xs md:text-sm text-indigo-200 max-w-2xl mx-auto leading-relaxed">
-                Explora cada uno de nuestros 9 temas exclusivos con todos los efectos interactivos en vivo: música, mapas de ceremonia, control de pases de invitados y galerías de fotos.
+                Explora cada uno de nuestros 12 temas exclusivos con todos los efectos interactivos en vivo: música, mapas de ceremonia, control de pases de invitados y galerías de fotos.
               </p>
             </div>
           </header>
@@ -906,7 +993,7 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
             /* Render del Demo en vivo dentro de un iframe interactivo */
             <div className="w-full h-[calc(100vh-140px)] rounded-2xl border border-slate-200 overflow-hidden shadow-xl bg-white">
               <iframe
-                srcDoc={generarHTMLFinal(datosDefault.premium, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
+                srcDoc={generarHTMLFinal({ ...datosDefault.premium, seccionesExcluidas: ["apertura"] }, temas.find(t => t.id === selectedCatalogTemaId) || temas[0])}
                 className="w-full h-full border-0"
                 title="Invitación Demo en Vivo"
               />
@@ -990,7 +1077,7 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
                             {/* Iframe minificado cargando el HTML final y ajustado exactamente al tamaño de la pantalla */}
                             <div className="w-full h-full overflow-hidden absolute inset-0 bg-slate-950">
                               <iframe 
-                                srcDoc={generarHTMLFinal(datos || datosDefault.premium, t)}
+                                srcDoc={generarHTMLFinal({ ...(datos || datosDefault.premium), seccionesExcluidas: [...((datos || datosDefault.premium).seccionesExcluidas || []), "apertura"] }, t)}
                                 className="absolute border-0 pointer-events-none select-none"
                                 style={{
                                   width: "354px",
@@ -1176,6 +1263,16 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
             <Download className="w-4 h-4 text-white" />
             <span>Descargar index.html</span>
           </button>
+
+                    <button
+                                onClick={() => guardarEnSupabase(datos, temaActual)
+                                              .then(() => mostrarToast('✅ Guardado en Supabase', 'success'))
+                                                            .catch(() => mostrarToast('❌ Error al guardar', 'error'))
+                                                                        }
+                                                                                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                                                                                              >
+                                                                                                          <span>💾 Guardar en Supabase</span>
+                                                                                                                    </button>
         </div>
       </header>
 
@@ -1281,14 +1378,46 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
                       );
                     })}
                   </div>
-                  <div className="mt-3.5 p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
-                    <span className="font-bold text-slate-700 block mb-1">Secciones Habilitadas en este Paquete:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {paquetes[datos.paquete].secciones.map(secName => (
-                        <span key={secName} className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px] font-medium">
-                          {secName}
+                  <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center justify-between mb-3 border-b border-slate-200/60 pb-2">
+                      <div>
+                        <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                          <span>⚙️</span> Personalizar Secciones Habilitadas
                         </span>
-                      ))}
+                        <span className="text-[10px] text-slate-500 block mt-0.5">Apaga las secciones que no desees incluir en el link final</span>
+                      </div>
+                      <button 
+                        onClick={() => setDatos({ ...datos, seccionesExcluidas: [] })}
+                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs cursor-pointer hover:border-slate-300"
+                      >
+                        🔄 Habilitar Todas
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                      {paquetes[datos.paquete].secciones.map(secName => {
+                        const isExcluded = datos.seccionesExcluidas?.includes(secName);
+                        const isEnabled = !isExcluded;
+                        const label = NOMBRES_SECCIONES[secName] || secName;
+                        return (
+                          <div 
+                            key={secName} 
+                            onClick={() => toggleSeccion(secName)}
+                            className={`flex items-center justify-between p-2 rounded-lg border transition cursor-pointer select-none ${isEnabled ? 'bg-emerald-50/50 border-emerald-200 hover:bg-emerald-50' : 'bg-slate-100/50 border-slate-200 opacity-60 hover:bg-slate-100'}`}
+                          >
+                            <span className={`text-[11px] font-bold truncate ${isEnabled ? 'text-emerald-900' : 'text-slate-500'}`}>
+                              {label}
+                            </span>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+                                {isEnabled ? "ON" : "OFF"}
+                              </span>
+                              <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                                <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-xs transform duration-200 ease-in-out ${isEnabled ? 'translate-x-3.5' : 'translate-x-0'}`}></div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1488,7 +1617,7 @@ async function guardarEnSupabase(datosInvitacion: any, temaActual: any) {  try {
                   </h3>
                   <div className="p-4 bg-indigo-50/50 border border-indigo-100/70 rounded-xl space-y-4">
                     <p className="text-xs text-slate-600 leading-relaxed font-sans">
-                      Genera y comparte un link público para que tus clientes o invitados visualicen un precioso catálogo con botones para probar en vivo la demo interactiva de cada uno de los 9 temas.
+                      Genera y comparte un link público para que tus clientes o invitados visualicen un precioso catálogo con botones para probar en vivo la demo interactiva de cada uno de los 12 temas.
                     </p>
                     
                     <div className="space-y-2">

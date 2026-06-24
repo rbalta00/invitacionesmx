@@ -653,9 +653,6 @@ export const temas: TemaConfig[] = [
         animation: coquette-float-bow-reverse 2.8s ease-in-out infinite alternate !important;
       }
 
-      /* Decorativo interior de los cajones h3 */in-out infinite alternate !important;
-      }
-
       /* Decorativo interior de los cajones h3 */
       .gold-card h3::before,
       [data-section] h3::before {
@@ -688,6 +685,200 @@ export const temas: TemaConfig[] = [
       [data-section] select:focus {
         border-color: #E45D8C !important;
         box-shadow: 0 0 0 3px rgba(228, 93, 140, 0.15) !important;
+        outline: none !important;
+      }
+
+      /* Animaciones */
+      @keyframes coquette-float-bow {
+        0% { transform: translateY(0) rotate(-6deg) scale(1); }
+        100% { transform: translateY(-3px) rotate(6deg) scale(1.05); }
+      }
+      @keyframes coquette-float-bow-reverse {
+        0% { transform: translateY(0) rotate(6deg) scale(1.02); }
+        100% { transform: translateY(3px) rotate(-6deg) scale(0.97); }
+      }
+      @keyframes coquette-sparkle-pulse {
+        0%, 100% { transform: scale(0.9) rotate(0deg); opacity: 0.5; }
+        50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+      }
+    `
+  },
+  {
+    id: "coquette-luxe",
+    nombre: "XV Coquette Luxe 💎 (Elegancia & Oro)",
+    fontHeading: "Playfair Display",
+    fontBody: "Garamond",
+    fontCursive: "Parisienne",
+    colors: {
+      primary: "#C66B8F",
+      secondary: "#D4AF37",
+      accent: "#6B2545",
+      dark: "#1A1A1A",
+      light: "#E5E5E5",
+      bg: "#FBF8F3",
+      border: "#D4AF37"
+    },
+    bgGradient: "linear-gradient(135deg, #FBF8F3 0%, #F5EEDB 50%, #C66B8F 100%)",
+    textDark: "#1A1A1A",
+    textLight: "#FFFFFF",
+    iconStyle: "border border-[#D4AF37] rounded-full text-[#C66B8F] p-2.5 bg-white shadow-[0_2px_10px_rgba(212,175,55,0.15)]",
+    decorativeEmoji: "💎",
+    customStyle: `
+      .theme-container {
+        font-family: 'Garamond', 'Inter', sans-serif;
+        background-color: #FBF8F3;
+        color: #1A1A1A;
+        background-image: radial-gradient(#D4AF3740 1.5px, transparent 1.5px);
+        background-size: 28px 28px;
+        position: relative;
+      }
+      .heading-text {
+        font-family: 'Playfair Display', 'Didot', 'Bodoni MT', serif;
+        color: #C66B8F;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(212,175,55,0.2);
+      }
+      .cursive-text {
+        font-family: 'Parisienne', cursive;
+        color: #C66B8F;
+        font-size: 3.4rem;
+        line-height: 1.1;
+        position: relative;
+        display: inline-block;
+        padding-left: 20px;
+        padding-right: 20px;
+        text-shadow: 0 1px 2px rgba(107,37,69,0.15);
+      }
+      
+      /* Destellos ✨ a los lados de los textos cursivos o títulos */
+      .cursive-text::before {
+        content: '✨';
+        position: absolute;
+        left: -6px;
+        top: 20%;
+        font-size: 16px;
+        color: #D4AF37;
+        animation: coquette-sparkle-pulse 2s infinite ease-in-out;
+      }
+      .cursive-text::after {
+        content: '✨';
+        position: absolute;
+        right: -6px;
+        top: 20%;
+        font-size: 16px;
+        color: #D4AF37;
+        animation: coquette-sparkle-pulse 2s infinite ease-in-out 1s;
+      }
+
+      /* Listón de raso rosa con moño elegante y ondas colgantes de la portada */
+      [data-section="portada"] .font-serif.text-gray-500.mb-1::before {
+        content: "" !important;
+        display: block !important;
+        width: 140px !important;
+        height: 140px !important;
+        margin: -45px auto 5px auto !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M45 42C45 39 55 39 55 42C55 45 45 45 45 42Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M45 42C35 34 22 38 28 48C32 55 45 45 45 42Z' fill='%23C66B8F' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M55 42C65 34 78 38 72 48C68 55 55 45 55 42Z' fill='%23C66B8F' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M46 44C43 54 35 62 38 72C41 82 48 90 46 95C42 90 35 78 33 68C31 58 41 50 46 44Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1'/%3E%3Cpath d='M54 44C57 54 65 62 62 72C59 82 52 90 54 95C58 90 65 78 67 68C69 58 59 50 54 44Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        filter: drop-shadow(0 4px 8px rgba(198, 107, 143, 0.4)) !important;
+        animation: coquette-float-bow 3.5s ease-in-out infinite alternate !important;
+      }
+
+      /* Cajones / Cuadros de Sección Coquette Luxe con Ondas Dobles y Listones Dorados */
+      .gold-card, 
+      [data-section] > .bg-white.rounded-3xl, 
+      [data-section] > .rounded-3xl {
+        border: 4px double #D4AF37 !important;
+        background-color: rgba(251, 248, 243, 0.85) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        background-image: 
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23D4AF37'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5z'/%3E%3C/svg%3E"),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23D4AF37'%3E%3Cpath d='M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5z'/%3E%3C/svg%3E") !important;
+        background-position: top 14px right 14px, bottom 14px left 14px !important;
+        background-size: 18px 18px, 18px 18px !important;
+        background-repeat: no-repeat !important;
+        box-shadow: 0 15px 35px rgba(198, 107, 143, 0.15) !important;
+        border-radius: 20px !important;
+        position: relative !important;
+        padding: 1.5rem !important;
+        overflow: visible !important;
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+      }
+
+      /* Listón elegante de raso rosa con moño y ondas superiores izquierdas */
+      .gold-card::before, 
+      [data-section] > .bg-white.rounded-3xl::before, 
+      [data-section] > .rounded-3xl::before {
+        content: '' !important;
+        position: absolute !important;
+        top: -24px !important;
+        left: -20px !important;
+        width: 65px !important;
+        height: 65px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M45 42C45 39 55 39 55 42C55 45 45 45 45 42Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M45 42C35 34 22 38 28 48C32 55 45 45 45 42Z' fill='%23C66B8F' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M55 42C65 34 78 38 72 48C68 55 55 45 55 42Z' fill='%23C66B8F' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M46 44C43 54 35 62 38 72C41 82 48 90 46 95C42 90 35 78 33 68C31 58 41 50 46 44Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1'/%3E%3Cpath d='M54 44C57 54 65 62 62 72C59 82 52 90 54 95C58 90 65 78 67 68C69 58 59 50 54 44Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        z-index: 20 !important;
+        filter: drop-shadow(0 4px 8px rgba(198, 107, 143, 0.4)) !important;
+        animation: coquette-float-bow 2.8s ease-in-out infinite alternate !important;
+      }
+      
+      /* Listón elegante de raso rosa con moño y ondas inferiores derechas */
+      .gold-card::after, 
+      [data-section] > .bg-white.rounded-3xl::after, 
+      [data-section] > .rounded-3xl::after {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -24px !important;
+        right: -20px !important;
+        width: 65px !important;
+        height: 65px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cpath d='M45 42C45 39 55 39 55 42C55 45 45 45 45 42Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M45 42C35 34 22 38 28 48C32 55 45 45 45 42Z' fill='%23C66B8F' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M55 42C65 34 78 38 72 48C68 55 55 45 55 42Z' fill='%23C66B8F' stroke='%23D4AF37' stroke-width='1.5'/%3E%3Cpath d='M46 44C43 54 35 62 38 72C41 82 48 90 46 95C42 90 35 78 33 68C31 58 41 50 46 44Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1'/%3E%3Cpath d='M54 44C57 54 65 62 62 72C59 82 52 90 54 95C58 90 65 78 67 68C69 58 59 50 54 44Z' fill='%236B2545' stroke='%23D4AF37' stroke-width='1'/%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        z-index: 20 !important;
+        filter: drop-shadow(0 4px 8px rgba(198, 107, 143, 0.4)) !important;
+        animation: coquette-float-bow-reverse 2.8s ease-in-out infinite alternate !important;
+      }
+
+      /* Decorativo interior de los cajones h3 */
+      .gold-card h3::before,
+      [data-section] h3::before {
+        content: '💎 ';
+        color: #D4AF37;
+        font-size: 14px;
+        opacity: 0.85;
+      }
+      .gold-card h3::after,
+      [data-section] h3::after {
+        content: ' 💎';
+        color: #D4AF37;
+        font-size: 14px;
+        opacity: 0.85;
+      }
+
+      /* Estilo de los campos de entrada */
+      .gold-card input, 
+      .gold-card select,
+      [data-section] input,
+      [data-section] select {
+        border-color: #D4AF37 !important;
+        background-color: #FFFFFF !important;
+        color: #1A1A1A !important;
+        border-width: 1.5px !important;
+      }
+      .gold-card input:focus, 
+      .gold-card select:focus,
+      [data-section] input:focus,
+      [data-section] select:focus {
+        border-color: #C66B8F !important;
+        box-shadow: 0 0 0 3px rgba(198, 107, 143, 0.15) !important;
         outline: none !important;
       }
 
@@ -741,7 +932,7 @@ export const fotosFicticiasDefault: Record<string, string[]> = {
 
 export const getFotosPorTema = (temaId: string): string[] => {
   // Retorna fotos ficticias predefinidas para el tema o las generales
-  const actualId = temaId === "coquette-pink" ? "mariposas" : temaId;
+  const actualId = (temaId === "coquette-pink" || temaId === "coquette-luxe") ? "mariposas" : temaId;
   return fotosFicticiasDefault[actualId] || fotosFicticiasDefault["dorado-clasico"];
 };
 
