@@ -1,28 +1,30 @@
 import { useState, useEffect, useRef, ChangeEvent, useMemo, memo } from "react";
-import { 
-  Sparkles, 
-  Settings, 
-  FileText, 
-  Clipboard, 
-  Trash2, 
-  Plus, 
-  Download, 
-  RefreshCw, 
-  Smartphone, 
+import {
+  Sparkles,
+  Settings,
+  FileText,
+  Clipboard,
+  Trash2,
+  Plus,
+  Download,
+  RefreshCw,
+  Smartphone,
   Tablet,
   Monitor,
-  Copy, 
-  Check, 
-  Upload, 
-  Layers, 
-  UserPlus, 
-  MapPin, 
-  Calendar, 
-  Gift, 
-  Music, 
+  Copy,
+  Check,
+  Upload,
+  Layers,
+  UserPlus,
+  MapPin,
+  Calendar,
+  Gift,
+  Music,
   Image as ImageIcon,
   Share2,
-  ListOrdered
+  ListOrdered,
+  Eye,
+  X
 } from "lucide-react";
 import { InvitacionDatos, TemaConfig } from "./types";
 import { temas, paquetes, datosDefault, getFotosPorTema } from "./data";
@@ -673,6 +675,9 @@ export default function App() {
   const [htmlCopiado, setHtmlCopiado] = useState(false);
   const [datosCopiados, setDatosCopiados] = useState(false);
   const [generandoEnlace, setGenerandoEnlace] = useState(false);
+
+  // Estado para mostrar modal de fondos guardados
+  const [mostrarFondosGuardados, setMostrarFondosGuardados] = useState(false);
 
   // Optimizaciones de PC: Dispositivo de vista previa y escala de zoom
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "tablet" | "desktop">("mobile");
@@ -1765,6 +1770,14 @@ export default function App() {
                         <span>Fondos protegidos</span>
                       </button>
                     </div>
+
+                    <button
+                      onClick={() => setMostrarFondosGuardados(true)}
+                      className="w-full flex items-center justify-center gap-2 p-2 border border-emerald-200 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition text-emerald-700 font-semibold text-[11px]"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Ver fondos guardados ({Object.keys(datos.bgImages || {}).length} temas)
+                    </button>
 
                     <div className="space-y-1">
                       <span className="block text-[10px] font-semibold text-slate-500">O pegar link directo (se actualiza automáticamente):</span>
@@ -3214,6 +3227,62 @@ export default function App() {
                 className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-lg transition cursor-pointer shadow-sm"
               >
                 Proceder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarFondosGuardados && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-2xl w-full shadow-2xl animate-scaleIn max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-extrabold text-slate-900">📸 Fondos guardados en Cloudinary</h3>
+              <button
+                onClick={() => setMostrarFondosGuardados(false)}
+                className="p-1 hover:bg-slate-100 rounded-lg transition"
+              >
+                <X className="w-5 h-5 text-slate-600" />
+              </button>
+            </div>
+
+            {Object.keys(datos.bgImages || {}).length === 0 ? (
+              <p className="text-sm text-slate-500 py-8 text-center">No hay fondos guardados aún. Sube fondos para cada tema.</p>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(datos.bgImages || {}).map(([temaId, url]) => {
+                  const tema = temas.find(t => t.id === temaId);
+                  return (
+                    <div key={temaId} className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <span className="block text-sm font-semibold text-slate-900">{tema?.nombre || temaId}</span>
+                          <code className="block text-[11px] text-slate-600 font-mono mt-1 break-all line-clamp-2">{url}</code>
+                        </div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(url);
+                            mostrarToast(`Link copiado: ${tema?.nombre}`, "success");
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-semibold rounded-lg transition whitespace-nowrap shrink-0"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          Copiar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setMostrarFondosGuardados(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+              >
+                Cerrar
               </button>
             </div>
           </div>
