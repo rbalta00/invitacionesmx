@@ -617,6 +617,9 @@ export default function App() {
   };
 
   const handleBgImageUrlChange = (url: string) => {
+    // Solo permitir cambios si el URL es válido y diferente al actual
+    if (!url.trim()) return;
+
     // Guardar en el almacenamiento persistente global de fondos
     try {
       const savedBgs = localStorage.getItem('xv_fondos_personalizados');
@@ -1754,28 +1757,25 @@ export default function App() {
 
                       <button
                         type="button"
-                        onClick={handleClearBgImage}
-                        disabled={!datos.bgImages?.[selectedTemaId]}
-                        className={`flex items-center justify-center gap-1.5 p-2 border rounded-lg transition text-center ${
-                          datos.bgImages?.[selectedTemaId]
-                            ? "bg-white border-rose-200 hover:bg-rose-50 text-rose-700 cursor-pointer font-bold text-[10px]"
-                            : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed font-medium text-[10px]"
-                        }`}
+                        disabled={true}
+                        title="Los fondos se mantienen hasta que subas uno nuevo para reemplazarlo"
+                        className="flex items-center justify-center gap-1.5 p-2 border rounded-lg bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed font-medium text-[10px]"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        <span>Restablecer</span>
+                        <span>Fondos protegidos</span>
                       </button>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="block text-[10px] font-semibold text-slate-500">O ingresar link directo de fondo:</span>
+                      <span className="block text-[10px] font-semibold text-slate-500">O pegar link directo (se actualiza automáticamente):</span>
                       <input
                         type="text"
                         value={datos.bgImages?.[selectedTemaId] && !datos.bgImages[selectedTemaId].startsWith("data:") ? datos.bgImages[selectedTemaId] : ""}
                         onChange={(e) => handleBgImageUrlChange(e.target.value)}
-                        placeholder="Pegar link de imagen de fondo..."
-                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-800 text-[11px] focus:border-indigo-500 outline-none font-mono"
+                        placeholder="El fondo se mostrará aquí al subir..."
+                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-700 text-[11px] outline-none font-mono"
                       />
+                      <span className="text-[9px] text-slate-500 italic">💾 Los fondos se guardan automáticamente y persisten para cada tema</span>
                     </div>
                   </div>
                 </div>
@@ -2622,16 +2622,12 @@ export default function App() {
 
                       <button
                         type="button"
-                        onClick={handleClearBgImage}
-                        disabled={!datos.bgImages?.[selectedTemaId]}
-                        className={`flex flex-col items-center justify-center p-3 border rounded-lg transition text-center ${
-                          datos.bgImages?.[selectedTemaId]
-                            ? "bg-white border-rose-200 hover:bg-rose-50 text-rose-700 cursor-pointer"
-                            : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
-                        }`}
+                        disabled={true}
+                        title="Los fondos se mantienen hasta que subas uno nuevo para reemplazarlo"
+                        className="flex flex-col items-center justify-center p-3 border rounded-lg bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
                       >
                         <Trash2 className="w-4 h-4 mb-1" />
-                        <span className="text-[11px] font-bold">Restablecer Fondo</span>
+                        <span className="text-[11px] font-bold">Fondos protegidos</span>
                       </button>
                     </div>
 
