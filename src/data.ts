@@ -907,169 +907,122 @@ export const temas: TemaConfig[] = [
       primary: "#00D9FF",
       secondary: "#6FFF00",
       accent: "#9D4EDD",
-      dark: "#0A0E27",
-      light: "#E0F7FF",
-      bg: "#050F2D",
+      dark: "#E0F7FF",
+      light: "#1a2a4f",
+      bg: "#050f2d",
       border: "#00D9FF"
     },
-    bgGradient: "linear-gradient(135deg, #0A1E3F 0%, #1a0e3f 50%, #0F0F3F 100%)",
+    bgGradient: "linear-gradient(135deg, #050f2d 0%, #0a1e3f 50%, #1a0a3f 100%)",
     textDark: "#00D9FF",
-    textLight: "#FFFFFF",
-    iconStyle: "border-2 border-[#00D9FF] rounded-full text-[#00D9FF] p-2 bg-[#0A1E3F] shadow-lg shadow-[#00D9FF]/30",
+    textLight: "#E0F7FF",
+    iconStyle: "border-2 border-[#00D9FF] rounded-full text-[#6FFF00] p-2 bg-[#0a1e3f] shadow-lg shadow-[#00D9FF]/40",
     decorativeEmoji: "🌌",
     customStyle: `
+      body {
+        background: linear-gradient(135deg, #050f2d 0%, #0a1e3f 50%, #1a0a3f 100%) !important;
+        color: #E0F7FF !important;
+      }
+
       .theme-container {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #050F2D 0%, #0a1e4f 50%, #1a0a3f 100%);
-        color: #E0F7FF;
-        position: relative;
-        overflow: hidden;
+        background: transparent !important;
+        color: #E0F7FF !important;
       }
 
-      /* Efecto de Aurora Boreal animada */
-      .theme-container::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 100%;
-        background:
-          radial-gradient(ellipse at 20% 50%, rgba(0, 217, 255, 0.15) 0%, transparent 50%),
-          radial-gradient(ellipse at 80% 30%, rgba(159, 78, 221, 0.15) 0%, transparent 50%),
-          radial-gradient(ellipse at 50% 80%, rgba(111, 255, 0, 0.1) 0%, transparent 50%);
-        animation: aurora-wave 8s ease-in-out infinite;
-        pointer-events: none;
-        z-index: 1;
-      }
-
-      .theme-container > * {
-        position: relative;
-        z-index: 2;
+      h1, h2, h3, h4, h5, h6 {
+        color: #6FFF00 !important;
+        text-shadow: 0 0 15px rgba(111, 255, 0, 0.6);
       }
 
       .heading-text {
-        font-family: 'Cinzel', serif;
-        color: #00D9FF;
+        font-family: 'Cinzel', serif !important;
+        color: #00D9FF !important;
         font-weight: 700;
         letter-spacing: 0.08em;
-        text-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 40px rgba(159, 78, 221, 0.3);
-        animation: glow-pulse 3s ease-in-out infinite;
+        text-shadow: 0 0 20px rgba(0, 217, 255, 0.7);
       }
 
       .cursive-text {
-        font-family: 'Dancing Script', cursive;
-        color: #6FFF00;
-        font-size: 3rem;
-        text-shadow: 0 0 15px rgba(111, 255, 0, 0.6), 0 0 30px rgba(0, 217, 255, 0.3);
-        animation: glow-pulse-green 4s ease-in-out infinite;
+        font-family: 'Dancing Script', cursive !important;
+        color: #6FFF00 !important;
+        font-size: 2.8rem;
+        text-shadow: 0 0 20px rgba(111, 255, 0, 0.8);
       }
 
       .gold-card,
       [data-section] > .bg-white.rounded-3xl,
-      [data-section] > .rounded-3xl {
-        border: 2px solid #00D9FF;
-        background: linear-gradient(135deg, rgba(10, 30, 63, 0.8) 0%, rgba(26, 14, 63, 0.8) 100%);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 0 20px rgba(0, 217, 255, 0.3), inset 0 0 20px rgba(159, 78, 221, 0.1);
-        border-radius: 15px;
+      [data-section] > .rounded-3xl,
+      section {
+        border: 2px solid #00D9FF !important;
+        background: linear-gradient(135deg, rgba(10, 30, 63, 0.7) 0%, rgba(26, 14, 63, 0.7) 100%) !important;
+        backdrop-filter: blur(8px) !important;
+        box-shadow: 0 0 25px rgba(0, 217, 255, 0.4) !important;
+        border-radius: 18px !important;
       }
 
-      /* Efecto de neon en bordes */
-      .gold-card:hover,
-      [data-section] > .bg-white.rounded-3xl:hover,
-      [data-section] > .rounded-3xl:hover {
-        border-color: #6FFF00;
-        box-shadow: 0 0 30px rgba(111, 255, 0, 0.5), inset 0 0 20px rgba(159, 78, 221, 0.2);
-        transition: all 0.3s ease;
-      }
-
-      .gold-card h3,
       [data-section] h3 {
-        color: #6FFF00;
-        text-shadow: 0 0 10px rgba(111, 255, 0, 0.5);
+        color: #6FFF00 !important;
+        text-shadow: 0 0 10px rgba(111, 255, 0, 0.7);
       }
 
-      /* Input fields with aurora style */
-      .gold-card input,
-      .gold-card select,
-      [data-section] input,
-      [data-section] select {
-        background-color: rgba(10, 30, 63, 0.9);
-        border: 1.5px solid #00D9FF;
-        color: #E0F7FF;
-        border-radius: 8px;
+      [data-section] p {
+        color: #E0F7FF !important;
       }
 
-      .gold-card input::placeholder,
-      [data-section] input::placeholder {
-        color: rgba(0, 217, 255, 0.5);
+      input, select, textarea {
+        background-color: rgba(10, 30, 63, 0.85) !important;
+        border: 1.5px solid #00D9FF !important;
+        color: #E0F7FF !important;
+        border-radius: 8px !important;
       }
 
-      .gold-card input:focus,
-      .gold-card select:focus,
-      [data-section] input:focus,
-      [data-section] select:focus {
-        border-color: #6FFF00;
-        box-shadow: 0 0 15px rgba(111, 255, 0, 0.4);
-        outline: none;
+      input::placeholder, textarea::placeholder {
+        color: rgba(0, 217, 255, 0.6) !important;
       }
 
-      /* Aurora wave animation */
-      @keyframes aurora-wave {
-        0%, 100% {
-          background-position: 0% 50%;
-          opacity: 0.3;
-        }
-        50% {
-          background-position: 100% 50%;
-          opacity: 0.6;
-        }
+      input:focus, select:focus, textarea:focus {
+        border-color: #6FFF00 !important;
+        box-shadow: 0 0 20px rgba(111, 255, 0, 0.5) !important;
+        outline: none !important;
       }
 
-      /* Glow pulse for text */
-      @keyframes glow-pulse {
-        0%, 100% {
-          text-shadow: 0 0 20px rgba(0, 217, 255, 0.5), 0 0 40px rgba(159, 78, 221, 0.3);
-        }
-        50% {
-          text-shadow: 0 0 30px rgba(0, 217, 255, 0.8), 0 0 60px rgba(159, 78, 221, 0.5);
-        }
+      button {
+        background-color: #9D4EDD !important;
+        color: white !important;
+        text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+        border: 1px solid #6FFF00 !important;
+        box-shadow: 0 0 15px rgba(157, 78, 221, 0.4) !important;
       }
 
-      @keyframes glow-pulse-green {
-        0%, 100% {
-          text-shadow: 0 0 15px rgba(111, 255, 0, 0.6), 0 0 30px rgba(0, 217, 255, 0.3);
-        }
-        50% {
-          text-shadow: 0 0 25px rgba(111, 255, 0, 0.9), 0 0 50px rgba(0, 217, 255, 0.5);
-        }
+      button:hover {
+        background-color: #6FFF00 !important;
+        color: #050f2d !important;
+        box-shadow: 0 0 25px rgba(111, 255, 0, 0.7) !important;
       }
 
-      /* Efecto de lluvia de estrellas */
-      .gold-card::before,
-      [data-section] > .bg-white.rounded-3xl::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00D9FF, #6FFF00, #9D4EDD, transparent);
-        animation: aurora-shimmer 3s ease-in-out infinite;
+      .text-gray-500 {
+        color: rgba(0, 217, 255, 0.7) !important;
       }
 
-      @keyframes aurora-shimmer {
-        0% {
-          transform: translateX(-100%) scaleX(0);
-        }
-        50% {
-          transform: translateX(0) scaleX(1);
-        }
-        100% {
-          transform: translateX(100%) scaleX(0);
-        }
+      .text-gray-700 {
+        color: #E0F7FF !important;
+      }
+
+      .text-accent {
+        color: #6FFF00 !important;
+      }
+
+      .text-primary {
+        color: #00D9FF !important;
+      }
+
+      .text-dark {
+        color: #6FFF00 !important;
+      }
+
+      .bg-gray-50, .bg-white {
+        background-color: rgba(10, 30, 63, 0.6) !important;
+        border-color: #00D9FF !important;
       }
     `
   }
