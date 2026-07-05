@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, ChangeEvent, useMemo, useCallback, memo } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   Sparkles,
   Settings,
@@ -702,6 +704,7 @@ export default function App() {
 
   // Estado de carga para Cloudinary
   const [subiendoCloudinary, setSubiendoCloudinary] = useState<boolean>(false);
+  const [generandoPDF, setGenerandoPDF] = useState<boolean>(false);
   const [enlaceCloudinary, setEnlaceCloudinary] = useState<string>('');
   const [estadoGuardadoLink, setEstadoGuardadoLink] = useState<'idle' | 'guardando' | 'ok' | 'error'>('idle');
 
@@ -1043,7 +1046,7 @@ export default function App() {
     const htmlCompleto = generarHTMLFinal(datos, temaActual);
     const blob = new Blob([htmlCompleto], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement("a");
     a.href = url;
     // Nombre del archivo personalizado según la quinceañera
@@ -1053,6 +1056,85 @@ export default function App() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  // Generar un PDF de regalo con el diseño completo de la invitación (para imprimir o guardar de recuerdo)
+  const handleDescargarPDF = async () => {
+    setGenerandoPDF(true);
+    let contenedorTemporal: HTMLIFrameElement | null = null;
+    try {
+      const htmlCompleto = generarHTMLFinal(datos, temaActual);
+
+      // Renderizamos la invitación en un iframe oculto, ya "abierta", para capturarla completa
+      contenedorTemporal = document.createElement("iframe");
+      contenedorTemporal.style.position = "fixed";
+      contenedorTemporal.style.top = "-99999px";
+      contenedorTemporal.style.left = "0";
+      contenedorTemporal.style.width = "420px";
+      contenedorTemporal.style.height = "1px";
+      contenedorTemporal.style.border = "0";
+      document.body.appendChild(contenedorTemporal);
+
+      await new Promise<void>((resolve) => {
+        contenedorTemporal!.onload = () => resolve();
+        contenedorTemporal!.srcdoc = htmlCompleto;
+      });
+
+      const iframeDoc = contenedorTemporal.contentDocument;
+      if (!iframeDoc) throw new Error("No se pudo preparar la invitación para exportar");
+
+      // Forzamos el estado "abierto" (sin overlay de sobre) para que el PDF muestre el contenido completo
+      iframeDoc.body.classList.add("experiencia-iniciada");
+      const overlaySobre = iframeDoc.getElementById("pantalla-apertura");
+      if (overlaySobre) overlaySobre.style.display = "none";
+
+      // Esperamos a que fuentes/imágenes de fondo carguen antes de medir la altura real
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      contenedorTemporal.style.height = `${iframeDoc.body.scrollHeight}px`;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(iframeDoc.body, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 2,
+        backgroundColor: "#ffffff",
+        windowWidth: 420,
+        height: iframeDoc.body.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+      // jsPDF no permite páginas de más de 14400 unidades: dividimos la captura larga
+      // en páginas tamaño carta (misma proporción), como un conversor de página web a PDF.
+      const imgWidth = canvas.width;
+      const pageHeight = Math.round(imgWidth * (11 / 8.5));
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [imgWidth, pageHeight]
+      });
+
+      let posicionY = 0;
+      let alturaRestante = canvas.height;
+      pdf.addImage(imgData, "JPEG", 0, posicionY, imgWidth, canvas.height);
+      alturaRestante -= pageHeight;
+
+      while (alturaRestante > 0) {
+        posicionY -= pageHeight;
+        pdf.addPage([imgWidth, pageHeight]);
+        pdf.addImage(imgData, "JPEG", 0, posicionY, imgWidth, canvas.height);
+        alturaRestante -= pageHeight;
+      }
+
+      const slugName = (datos.nombre || "invitacion").toLowerCase().replace(/[^a-z0-9]/g, "-");
+      pdf.save(`invitacion-${slugName}-regalo.pdf`);
+      mostrarToast("🎁 PDF de regalo generado con éxito", "success");
+    } catch (err: any) {
+      mostrarToast("Error al generar el PDF: " + err.message, "error");
+    } finally {
+      if (contenedorTemporal) document.body.removeChild(contenedorTemporal);
+      setGenerandoPDF(false);
+    }
   };
 
   // Abrir vista previa en nueva pestaña (optimización para PC)
@@ -1732,8 +1814,8 @@ export default function App() {
             <span>Limpiar</span>
           </button>
 
-          <button 
-            onClick={handleDescargarHTML} 
+          <button
+            onClick={handleDescargarHTML}
             className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer transform active:scale-95"
             id="descargar-btn"
           >
@@ -1751,6 +1833,15 @@ export default function App() {
             className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
             <span>💾 Guardar en Supabase</span>
+          </button>
+
+          <button
+            onClick={handleDescargarPDF}
+            disabled={generandoPDF}
+            className="px-5 py-2 bg-rose-500 hover:bg-rose-600 disabled:bg-rose-300 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer transform active:scale-95"
+          >
+            <FileText className="w-4 h-4 text-white" />
+            <span>{generandoPDF ? "Generando PDF..." : "🎁 Descargar PDF de Regalo"}</span>
           </button>
         </div>
       </header>
