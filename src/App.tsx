@@ -313,14 +313,24 @@ const getDatosVisualizacionCatalog = (t: any, currentDatos?: any): any => {
   } catch (err) {
     console.error("Error al cargar diseño guardado del catálogo:", err);
   }
-  
+
   const baseData = getDatosCatalogTema(datosDefault.premium, t);
+
+  // Asegurar que los bgImages del usuario se incluyan siempre en el catálogo
+  const allBgImages = {
+    ...(baseData.bgImages || {}),
+    ...(currentDatos?.bgImages || {})
+  };
+
+  // Si hay un fondo personalizado para este tema, usarlo
+  const bgImagesWithUserBackground = {
+    ...allBgImages,
+    [t.id]: currentDatos?.bgImages?.[t.id] || allBgImages[t.id]
+  };
+
   return {
     ...baseData,
-    bgImages: {
-      ...(baseData.bgImages || {}),
-      ...(currentDatos?.bgImages || {})
-    },
+    bgImages: bgImagesWithUserBackground,
     ...(currentDatos?.fotos && currentDatos.fotos.length > 0 ? { fotos: currentDatos.fotos } : {})
   };
 };
