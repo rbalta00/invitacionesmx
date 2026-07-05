@@ -39,7 +39,7 @@ The app is almost entirely contained in five files under `src/`:
 ### External services (no server code in this repo)
 
 - **Cloudinary** — `subirACloudinary` uploads directly from the browser to a hardcoded cloud (`dswrrm5u1`) and unsigned preset (`invitaciones-xv`) for photos/backgrounds.
-- **Supabase** — `guardarEnSupabase` writes a row into an `invitaciones` table. It expects `window.supabaseClient` to already exist (declared as a global in `App.tsx`); this repo does not create that client anywhere (no script tag in `index.html`, no `@supabase/supabase-js` import), so it's expected to be injected by the hosting environment — if it's missing, the save silently logs an error and no-ops.
+- **Supabase** — `guardarEnSupabase` writes a row into an `invitaciones` table, and custom per-theme backgrounds (`fondos_personalizados`) are synced there too (upserted into a single row with `id: 1`) so they carry over across devices/domains, not just `localStorage`. The client is created in `App.tsx` from `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` env vars (see `.env.example`) via `@supabase/supabase-js` and exposed as `window.supabaseClient`; if those env vars are missing, it logs a warning and Supabase calls no-op.
 - **WhatsApp** — sharing/confirmation flows just build `https://api.whatsapp.com/send?phone=...&text=...` links and `window.open` them; no API integration.
 - `@google/genai` and `GEMINI_API_KEY` exist in `package.json`/`.env.example` as AI-Studio-template boilerplate but are not referenced anywhere in `src/` — treat as currently unused.
 

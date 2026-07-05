@@ -26,9 +26,19 @@ import {
   Eye,
   X
 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 import { InvitacionDatos, TemaConfig } from "./types";
 import { temas, paquetes, datosDefault, getFotosPorTema } from "./data";
 import { generarHTMLFinal } from "./templates";
+
+// Inicializar cliente de Supabase a partir de variables de entorno (Vite las inyecta en build time)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+if (supabaseUrl && supabaseAnonKey && typeof window !== "undefined") {
+  window.supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+} else if (typeof window !== "undefined") {
+  console.warn("Supabase no configurado: faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+}
 
 // Helper functions for UTF-8 safe and compact Base64 encoding/decoding of state in URLs
 const KEY_MAP: Record<string, string> = {
