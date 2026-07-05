@@ -615,6 +615,7 @@ export default function App() {
 
   // Estado de carga para Cloudinary
   const [subiendoCloudinary, setSubiendoCloudinary] = useState<boolean>(false);
+  const [enlaceCloudinary, setEnlaceCloudinary] = useState<string>('');
 
   // Función para subir archivos a Cloudinary con los datos provistos
   const subirACloudinary = async (file: File): Promise<string> => {
@@ -702,6 +703,57 @@ export default function App() {
     } finally {
       setSubiendoCloudinary(false);
       e.target.value = "";
+    }
+  };
+
+  const handleGuardarEnlaceCloudinary = async () => {
+    if (!enlaceCloudinary.trim()) {
+      mostrarToast('Por favor pega un link de Cloudinary', 'error');
+      return;
+    }
+
+    try {
+      // Guardar en el almacenamiento persistente global de fondos
+      const savedBgs = localStorage.getItem('xv_fondos_personalizados');
+      const customBgs = savedBgs ? JSON.parse(savedBgs) : {};
+      customBgs[selectedTemaId] = enlaceCloudinary.trim();
+      localStorage.setItem('xv_fondos_personalizados', JSON.stringify(customBgs));
+
+      // Guardar también en Supabase para sincronizar entre dispositivos
+      try {
+        if (window.supabaseClient) {
+          const supabase = window.supabaseClient;
+          await supabase
+            .from('invitaciones')
+            .upsert([{
+              id: 1,
+              nombre_quinceanera: datos.nombre || 'Sin nombre',
+              tema_elegido: selectedTemaId,
+              fondos_personalizados: customBgs,
+              estado: 'fondos_personalizados',
+              updated_at: new Date().toISOString()
+            }], { onConflict: 'id' });
+        }
+      } catch (err) {
+        console.warn("Advertencia: Error al guardar enlace en Supabase:", err);
+      }
+
+      // Actualizar datos en la app
+      setDatos(prev => {
+        const currentBgImages = prev.bgImages || {};
+        return {
+          ...prev,
+          bgImages: {
+            ...currentBgImages,
+            [selectedTemaId]: enlaceCloudinary.trim()
+          }
+        };
+      });
+
+      setEnlaceCloudinary('');
+      mostrarToast(`✅ Fondo de Cloudinary guardado para "${temaActual.nombre}"`, 'success');
+    } catch (err: any) {
+      mostrarToast("Error al guardar enlace: " + err.message, "error");
     }
   };
 
@@ -1832,7 +1884,7 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 mb-2">
                       <label className="flex items-center justify-center gap-1.5 p-2 border border-dashed border-indigo-200 rounded-lg bg-white hover:bg-indigo-50/40 transition cursor-pointer text-center group">
                         <Upload className={`w-3.5 h-3.5 text-indigo-500 group-hover:text-indigo-600 ${subiendoCloudinary ? 'animate-bounce' : ''}`} />
                         <span className="text-[10px] font-extrabold text-indigo-700">
@@ -1855,6 +1907,24 @@ export default function App() {
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Fondos protegidos</span>
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Pega link de Cloudinary aquí..."
+                        value={enlaceCloudinary}
+                        onChange={(e) => setEnlaceCloudinary(e.target.value)}
+                        className="flex-1 px-2 py-1.5 text-[11px] border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleGuardarEnlaceCloudinary}
+                        disabled={!enlaceCloudinary.trim()}
+                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-[10px] font-bold rounded-lg transition"
+                      >
+                        Guardar Link
                       </button>
                     </div>
 
@@ -2731,15 +2801,22 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className="space-y-1">
-                      <span className="block text-[10px] font-semibold text-slate-500">O ingresar link directo de fondo:</span>
+                    <div className="flex gap-2 pt-1">
                       <input
                         type="text"
-                        value={datos.bgImages?.[selectedTemaId] && !datos.bgImages[selectedTemaId].startsWith("data:") ? datos.bgImages[selectedTemaId] : ""}
-                        onChange={(e) => handleBgImageUrlChange(e.target.value)}
-                        placeholder="Pegar link de imagen de fondo..."
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-indigo-500 outline-none font-mono text-[11px]"
+                        placeholder="Pega link de Cloudinary aquí..."
+                        value={enlaceCloudinary}
+                        onChange={(e) => setEnlaceCloudinary(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-indigo-500 outline-none font-mono text-[11px]"
                       />
+                      <button
+                        type="button"
+                        onClick={handleGuardarEnlaceCloudinary}
+                        disabled={!enlaceCloudinary.trim()}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg transition"
+                      >
+                        Guardar
+                      </button>
                     </div>
                   </div>
                 </div>
