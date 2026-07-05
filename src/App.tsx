@@ -616,6 +616,7 @@ export default function App() {
   // Estado de carga para Cloudinary
   const [subiendoCloudinary, setSubiendoCloudinary] = useState<boolean>(false);
   const [enlaceCloudinary, setEnlaceCloudinary] = useState<string>('');
+  const [estadoGuardadoLink, setEstadoGuardadoLink] = useState<'idle' | 'guardando' | 'ok' | 'error'>('idle');
 
   // Función para subir archivos a Cloudinary con los datos provistos
   const subirACloudinary = async (file: File): Promise<string> => {
@@ -712,6 +713,8 @@ export default function App() {
       return;
     }
 
+    setEstadoGuardadoLink('guardando');
+
     try {
       // Guardar en el almacenamiento persistente global de fondos
       const savedBgs = localStorage.getItem('xv_fondos_personalizados');
@@ -720,22 +723,29 @@ export default function App() {
       localStorage.setItem('xv_fondos_personalizados', JSON.stringify(customBgs));
 
       // Guardar también en Supabase para sincronizar entre dispositivos
-      try {
-        if (window.supabaseClient) {
-          const supabase = window.supabaseClient;
-          await supabase
-            .from('invitaciones')
-            .upsert([{
-              id: 1,
-              nombre_quinceanera: datos.nombre || 'Sin nombre',
-              tema_elegido: selectedTemaId,
-              fondos_personalizados: customBgs,
-              estado: 'fondos_personalizados',
-              updated_at: new Date().toISOString()
-            }], { onConflict: 'id' });
-        }
-      } catch (err) {
-        console.warn("Advertencia: Error al guardar enlace en Supabase:", err);
+      if (!window.supabaseClient) {
+        setEstadoGuardadoLink('error');
+        mostrarToast('❌ Supabase no está disponible: el link solo se guardó en este navegador', 'error');
+        return;
+      }
+
+      const supabase = window.supabaseClient;
+      const { error } = await supabase
+        .from('invitaciones')
+        .upsert([{
+          id: 1,
+          nombre_quinceanera: datos.nombre || 'Sin nombre',
+          tema_elegido: selectedTemaId,
+          fondos_personalizados: customBgs,
+          estado: 'fondos_personalizados',
+          updated_at: new Date().toISOString()
+        }], { onConflict: 'id' });
+
+      if (error) {
+        console.error('Error de Supabase al guardar link:', error.message);
+        setEstadoGuardadoLink('error');
+        mostrarToast('❌ Error al guardar en Supabase: ' + error.message, 'error');
+        return;
       }
 
       // Actualizar datos en la app
@@ -751,8 +761,10 @@ export default function App() {
       });
 
       setEnlaceCloudinary('');
-      mostrarToast(`✅ Fondo de Cloudinary guardado para "${temaActual.nombre}"`, 'success');
+      setEstadoGuardadoLink('ok');
+      mostrarToast(`✅ Fondo guardado y sincronizado para "${temaActual.nombre}"`, 'success');
     } catch (err: any) {
+      setEstadoGuardadoLink('error');
       mostrarToast("Error al guardar enlace: " + err.message, "error");
     }
   };
@@ -1915,18 +1927,28 @@ export default function App() {
                         type="text"
                         placeholder="Pega link de Cloudinary aquí..."
                         value={enlaceCloudinary}
-                        onChange={(e) => setEnlaceCloudinary(e.target.value)}
+                        onChange={(e) => { setEnlaceCloudinary(e.target.value); setEstadoGuardadoLink('idle'); }}
                         className="flex-1 px-2 py-1.5 text-[11px] border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       <button
                         type="button"
                         onClick={handleGuardarEnlaceCloudinary}
-                        disabled={!enlaceCloudinary.trim()}
+                        disabled={!enlaceCloudinary.trim() || estadoGuardadoLink === 'guardando'}
                         className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-[10px] font-bold rounded-lg transition"
                       >
-                        Guardar Link
+                        {estadoGuardadoLink === 'guardando' ? 'Guardando...' : 'Guardar Link'}
                       </button>
                     </div>
+                    {estadoGuardadoLink === 'ok' && (
+                      <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex items-center gap-1.5">
+                        ✅ Guardado y sincronizado en todos los dispositivos
+                      </div>
+                    )}
+                    {estadoGuardadoLink === 'error' && (
+                      <div className="p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold flex items-center gap-1.5">
+                        ❌ No se pudo sincronizar. Revisa la conexión con Supabase.
+                      </div>
+                    )}
 
                     <button
                       onClick={() => setMostrarFondosGuardados(true)}
@@ -2806,18 +2828,28 @@ export default function App() {
                         type="text"
                         placeholder="Pega link de Cloudinary aquí..."
                         value={enlaceCloudinary}
-                        onChange={(e) => setEnlaceCloudinary(e.target.value)}
+                        onChange={(e) => { setEnlaceCloudinary(e.target.value); setEstadoGuardadoLink('idle'); }}
                         className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-800 text-xs focus:border-indigo-500 outline-none font-mono text-[11px]"
                       />
                       <button
                         type="button"
                         onClick={handleGuardarEnlaceCloudinary}
-                        disabled={!enlaceCloudinary.trim()}
+                        disabled={!enlaceCloudinary.trim() || estadoGuardadoLink === 'guardando'}
                         className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-lg transition"
                       >
-                        Guardar
+                        {estadoGuardadoLink === 'guardando' ? 'Guardando...' : 'Guardar'}
                       </button>
                     </div>
+                    {estadoGuardadoLink === 'ok' && (
+                      <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold flex items-center gap-1.5">
+                        ✅ Guardado y sincronizado en todos los dispositivos
+                      </div>
+                    )}
+                    {estadoGuardadoLink === 'error' && (
+                      <div className="p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[10px] font-bold flex items-center gap-1.5">
+                        ❌ No se pudo sincronizar. Revisa la conexión con Supabase.
+                      </div>
+                    )}
                   </div>
                 </div>
 
