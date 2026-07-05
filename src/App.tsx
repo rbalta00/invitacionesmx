@@ -510,22 +510,17 @@ export default function App() {
 
   const { initialDatos, initialTemaId, isView: isViewMode, isCatalog: isCatalogInitial, initialCatalogTemaId } = getInitialState();
 
-  // Detectar ruta actual: /catalogo o /generador
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-  const isCatalogRoute = currentPath.includes('/catalogo') || currentPath.includes('/catalogo/');
-  const isGeneratorRoute = currentPath.includes('/generador') || currentPath.includes('/generador/') || !isCatalogRoute;
+  // Detectar parámetro ?catalog=true para mostrar el catálogo
+  const queryParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const isCatalogMode_url = queryParams.get('catalog') === 'true';
 
   // Estado principal de los datos de la invitación
   const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
 
-  // Sincronizar modo con ruta: /catalogo muestra solo catálogo, /generador muestra solo generador
+  // Sincronizar modo con parámetro: ?catalog=true muestra catálogo, sin parámetro muestra generador
   useEffect(() => {
-    if (isCatalogRoute) {
-      setIsCatalogMode(true);
-    } else if (isGeneratorRoute && !isCatalogRoute) {
-      setIsCatalogMode(false);
-    }
-  }, [isCatalogRoute, isGeneratorRoute]);
+    setIsCatalogMode(isCatalogMode_url);
+  }, [isCatalogMode_url]);
 
   // Cargar fondos personalizados desde Supabase al iniciar
   useEffect(() => {
