@@ -40,6 +40,9 @@ if (supabaseUrl && supabaseAnonKey && typeof window !== "undefined") {
   console.warn("Supabase no configurado: faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
 }
 
+// Fila fija (columna `id` es uuid) usada para guardar/leer los fondos personalizados compartidos
+const FONDOS_ROW_ID = "00000000-0000-0000-0000-000000000001";
+
 // Helper functions for UTF-8 safe and compact Base64 encoding/decoding of state in URLs
 const KEY_MAP: Record<string, string> = {
   paquete: "p",
@@ -542,16 +545,16 @@ export default function App() {
         const { data, error } = await supabase
           .from('invitaciones')
           .select('fondos_personalizados')
-          .order('created_at', { ascending: false })
-          .limit(1);
+          .eq('id', FONDOS_ROW_ID)
+          .maybeSingle();
 
         if (error) {
           console.warn('Error al cargar fondos desde Supabase:', error.message);
           return;
         }
 
-        if (data && data.length > 0 && data[0].fondos_personalizados) {
-          const fondosGuardados = data[0].fondos_personalizados;
+        if (data && data.fondos_personalizados) {
+          const fondosGuardados = data.fondos_personalizados;
           setDatos(prev => ({
             ...prev,
             bgImages: {
@@ -682,7 +685,7 @@ export default function App() {
             await supabase
               .from('invitaciones')
               .upsert([{
-                id: 1, // ID fijo para mantener un único registro de fondos
+                id: FONDOS_ROW_ID,
                 nombre_quinceanera: datos.nombre || 'Sin nombre',
                 tema_elegido: selectedTemaId,
                 fondos_personalizados: customBgs,
@@ -743,7 +746,7 @@ export default function App() {
       const { error } = await supabase
         .from('invitaciones')
         .upsert([{
-          id: 1,
+          id: FONDOS_ROW_ID,
           nombre_quinceanera: datos.nombre || 'Sin nombre',
           tema_elegido: selectedTemaId,
           fondos_personalizados: customBgs,
