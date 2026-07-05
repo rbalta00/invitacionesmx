@@ -666,14 +666,17 @@ export default function App() {
         try {
           if (window.supabaseClient) {
             const supabase = window.supabaseClient;
+            // Usar upsert para actualizar o crear si no existe
             await supabase
               .from('invitaciones')
-              .insert([{
+              .upsert([{
+                id: 1, // ID fijo para mantener un único registro de fondos
                 nombre_quinceanera: datos.nombre || 'Sin nombre',
                 tema_elegido: selectedTemaId,
                 fondos_personalizados: customBgs,
-                estado: 'fondos_personalizados'
-              }]);
+                estado: 'fondos_personalizados',
+                updated_at: new Date().toISOString()
+              }], { onConflict: 'id' });
             console.log('✅ Fondo guardado en Supabase');
           }
         } catch (err) {
