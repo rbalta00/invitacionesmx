@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ChangeEvent, useMemo, memo } from "react";
+import { useState, useEffect, useRef, ChangeEvent, useMemo, useCallback, memo } from "react";
 import {
   Sparkles,
   Settings,
@@ -416,6 +416,86 @@ const NOMBRES_SECCIONES: Record<string, string> = {
   cierre: "Mensaje de cierre 🌸"
 };
 
+// Lista de toggles de secciones habilitadas/deshabilitadas, memoizada para no recalcularse
+// cuando cambia un estado de la app no relacionado (ej. abrir un modal).
+const SeccionesToggleList = memo(({ secciones, seccionesExcluidas, onToggle }: {
+  secciones: string[];
+  seccionesExcluidas: string[];
+  onToggle: (secName: string) => void;
+}) => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+      {secciones.map(secName => {
+        const isExcluded = seccionesExcluidas?.includes(secName);
+        const isEnabled = !isExcluded;
+        const label = NOMBRES_SECCIONES[secName] || secName;
+        return (
+          <div
+            key={secName}
+            onClick={() => onToggle(secName)}
+            className={`flex items-center justify-between p-2 rounded-lg border transition cursor-pointer select-none ${isEnabled ? 'bg-emerald-50/50 border-emerald-200 hover:bg-emerald-50' : 'bg-slate-100/50 border-slate-200 opacity-60 hover:bg-slate-100'}`}
+          >
+            <span className={`text-[11px] font-bold truncate ${isEnabled ? 'text-emerald-900' : 'text-slate-500'}`}>
+              {label}
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+                {isEnabled ? "ON" : "OFF"}
+              </span>
+              <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-xs transform duration-200 ease-in-out ${isEnabled ? 'translate-x-3.5' : 'translate-x-0'}`}></div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+});
+
+// Grid de selección de tema, memoizado por la misma razón que SeccionesToggleList.
+const TemasGrid = memo(({ selectedTemaId, onSelect }: {
+  selectedTemaId: string;
+  onSelect: (temaId: string) => void;
+}) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3" id="temas-grid">
+      {temas.map((t) => {
+        const isSelected = selectedTemaId === t.id;
+        const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante" || t.id === "neon";
+        return (
+          <button
+            key={t.id}
+            onClick={() => onSelect(t.id)}
+            className={`p-3 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer h-24 ${isSelected ? 'border-indigo-600 bg-indigo-50/70 shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/80'}`}
+            style={{
+              borderLeft: `4px solid ${t.colors.primary}`
+            }}
+          >
+            <div className="w-full flex items-center justify-between">
+              <span className="text-[13px] font-bold text-slate-800 block truncate">{t.nombre}</span>
+              {isDarkTheme && (
+                <span className="text-[9px] bg-indigo-50 border border-indigo-200 text-indigo-700 px-1.5 rounded font-semibold">Noche</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 mt-2 overflow-hidden w-full">
+              <span className="text-xs text-slate-500 truncate">Fuente: {t.fontHeading}</span>
+            </div>
+
+            <div className="flex gap-1.5 mt-2">
+              <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.primary }}></span>
+              <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.accent }}></span>
+              <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.light }}></span>
+              <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.dark }}></span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+});
+
 // Declarar tipo global para Supabase
 declare global {
   interface Window {
@@ -603,19 +683,13 @@ export default function App() {
     setToast({ mensaje, tipo });
   };
 
-  const toggleSeccion = (secName: string) => {
-    const ex = datos.seccionesExcluidas || [];
-    let newEx: string[];
-    if (ex.includes(secName)) {
-      newEx = ex.filter(s => s !== secName);
-    } else {
-      newEx = [...ex, secName];
-    }
-    setDatos({
-      ...datos,
-      seccionesExcluidas: newEx
+  const toggleSeccion = useCallback((secName: string) => {
+    setDatos(prev => {
+      const ex = prev.seccionesExcluidas || [];
+      const newEx = ex.includes(secName) ? ex.filter(s => s !== secName) : [...ex, secName];
+      return { ...prev, seccionesExcluidas: newEx };
     });
-  };
+  }, []);
 
   useEffect(() => {
     if (toast) {
@@ -1798,32 +1872,11 @@ export default function App() {
                         🔄 Habilitar Todas
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-                      {paquetes[datos.paquete].secciones.map(secName => {
-                        const isExcluded = datos.seccionesExcluidas?.includes(secName);
-                        const isEnabled = !isExcluded;
-                        const label = NOMBRES_SECCIONES[secName] || secName;
-                        return (
-                          <div 
-                            key={secName} 
-                            onClick={() => toggleSeccion(secName)}
-                            className={`flex items-center justify-between p-2 rounded-lg border transition cursor-pointer select-none ${isEnabled ? 'bg-emerald-50/50 border-emerald-200 hover:bg-emerald-50' : 'bg-slate-100/50 border-slate-200 opacity-60 hover:bg-slate-100'}`}
-                          >
-                            <span className={`text-[11px] font-bold truncate ${isEnabled ? 'text-emerald-900' : 'text-slate-500'}`}>
-                              {label}
-                            </span>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
-                                {isEnabled ? "ON" : "OFF"}
-                              </span>
-                              <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${isEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                                <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-xs transform duration-200 ease-in-out ${isEnabled ? 'translate-x-3.5' : 'translate-x-0'}`}></div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <SeccionesToggleList
+                      secciones={paquetes[datos.paquete].secciones}
+                      seccionesExcluidas={datos.seccionesExcluidas || []}
+                      onToggle={toggleSeccion}
+                    />
                   </div>
                 </div>
 
@@ -1833,40 +1886,7 @@ export default function App() {
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
                     2. Tema de la Invitación (CSS y Visuales Propios)
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3" id="temas-grid">
-                    {temas.map((t) => {
-                      const isSelected = selectedTemaId === t.id;
-                      const isDarkTheme = t.id === "celestial" || t.id === "princesa-elegante" || t.id === "neon";
-                      return (
-                        <button
-                          key={t.id}
-                          onClick={() => setSelectedTemaId(t.id)}
-                          className={`p-3 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer h-24 ${isSelected ? 'border-indigo-600 bg-indigo-50/70 shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/80'}`}
-                          style={{
-                            borderLeft: `4px solid ${t.colors.primary}`
-                          }}
-                        >
-                          <div className="w-full flex items-center justify-between">
-                            <span className="text-[13px] font-bold text-slate-800 block truncate">{t.nombre}</span>
-                            {isDarkTheme && (
-                              <span className="text-[9px] bg-indigo-50 border border-indigo-200 text-indigo-700 px-1.5 rounded font-semibold">Noche</span>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-1.5 mt-2 overflow-hidden w-full">
-                            <span className="text-xs text-slate-500 truncate">Fuente: {t.fontHeading}</span>
-                          </div>
-
-                          <div className="flex gap-1.5 mt-2">
-                            <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.primary }}></span>
-                            <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.accent }}></span>
-                            <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.light }}></span>
-                            <span className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ backgroundColor: t.colors.dark }}></span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <TemasGrid selectedTemaId={selectedTemaId} onSelect={setSelectedTemaId} />
 
                   {/* GESTIÓN DE FONDO EXCLUSIVO DEL TEMA ACTUAL */}
                   <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3.5">
