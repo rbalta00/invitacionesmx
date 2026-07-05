@@ -1030,32 +1030,32 @@ export const temas: TemaConfig[] = [
 
 export const fotosFicticiasDefault: Record<string, string[]> = {
   "dorado-clasico": [
-    "https://images.unsplash.com/photo-1549417229-aa67d3263c09?w=600&auto=format&fit=crop&q=80", // Vestido elegante
-    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80", // Tiara / tocado
-    "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600&auto=format&fit=crop&q=80", // Detalles anillo/flores
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80", // Luces de fiesta
-    "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=600&auto=format&fit=crop&q=80", // Salón decorado
-    "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&auto=format&fit=crop&q=80", // Copas brindis
-    "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600&auto=format&fit=crop&q=80", // Globos dorados
-    "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=600&auto=format&fit=crop&q=80", // Rosas beige
-    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&auto=format&fit=crop&q=80", // Pastel de boda/XV
-    "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=600&auto=format&fit=crop&q=80", // Zapatillas
-    "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&auto=format&fit=crop&q=80", // Altar ceremonial
-    "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&auto=format&fit=crop&q=80"  // Textura elegante
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221472/galeria_14_lxes6z.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221472/galeria_11_bpjkfg.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221471/galeria_9_fav4yb.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221471/galeria_13_u9b4yy.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221470/galeria_2_qzis0h.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221470/galeria_10_ivhusz.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221470/galeria_8_pen1l9.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221469/galeria_3_unnvjq.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221469/galeria_4_xezb3u.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221469/galeria_7_v8wlcb.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221467/galeria_6_eknlb7.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221466/galeria_5_qndgra.png"
   ],
   "mariposas": [
-    "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&auto=format&fit=crop&q=80", // Campo mágico flores
-    "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=600&auto=format&fit=crop&q=80", // Rosas rosa pastel
-    "https://images.unsplash.com/photo-1533616688419-b7a585564566?w=600&auto=format&fit=crop&q=80", // Vestido de hada/quince
-    "https://images.unsplash.com/photo-1562184552-997c461abbe6?w=600&auto=format&fit=crop&q=80", // Corona de brillantes
-    "https://images.unsplash.com/photo-1512418490979-92798cec1380?w=600&auto=format&fit=crop&q=80", // Brillos mágicos y luces
-    "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80", // Fondos pastel
-    "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=600&auto=format&fit=crop&q=80", // Zapatillas cristal
-    "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80", // Mariposas fantasía
-    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&auto=format&fit=crop&q=80", // Pastel rosas
-    "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&auto=format&fit=crop&q=80", // Brindis elegante
-    "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=600&auto=format&fit=crop&q=80", // Salón lila / rosa
-    "https://images.unsplash.com/photo-1549417229-aa67d3263c09?w=600&auto=format&fit=crop&q=80"  // Ramo hermoso
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221472/galeria_14_lxes6z.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221472/galeria_11_bpjkfg.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221471/galeria_9_fav4yb.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221471/galeria_13_u9b4yy.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221470/galeria_2_qzis0h.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221470/galeria_10_ivhusz.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221470/galeria_8_pen1l9.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221469/galeria_3_unnvjq.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221469/galeria_4_xezb3u.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221469/galeria_7_v8wlcb.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221467/galeria_6_eknlb7.png",
+    "https://res.cloudinary.com/dswrrm5u1/image/upload/v1783221466/galeria_5_qndgra.png"
   ]
 };
 

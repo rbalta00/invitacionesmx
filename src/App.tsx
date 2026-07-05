@@ -244,6 +244,7 @@ async function guardarEnSupabase(datosInvitacion: InvitacionDatos, temaActual: T
       telefono_whatsapp: datosInvitacion.whatsappConfirmacion || '',
       email_cliente: '',
       link_invitacion: shareUrl || window.location.href,
+      fondos_personalizados: datosInvitacion.bgImages || {},
       estado: 'completada'
     };
 
@@ -284,10 +285,15 @@ const getColorSugeridoPorTema = (temaId: string, tColors: any): string[] => {
 // Genera un objeto de datos personalizado para el catálogo que garantiza que se muestren las características exactas del tema
 const getDatosCatalogTema = (baseDatos: any, t: any): any => {
   const base = baseDatos || datosDefault.premium;
+  // Obtener fotos del tema y seleccionar una aleatoria como portada
+  const fotosTema = getFotosPorTema(t.id);
+  const fotoPortadaAleatoria = fotosTema[Math.floor(Math.random() * fotosTema.length)];
+
   return {
     ...base,
     tema: t.id,
     fotos: [], // Vaciamos para que use las hermosas fotos temáticas del tema
+    fotoPortada: fotoPortadaAleatoria, // Foto aleatoria de quinceañera como portada
     colorSugerido: getColorSugeridoPorTema(t.id, t.colors)
   };
 };
@@ -305,8 +311,7 @@ const getDatosVisualizacionCatalog = (t: any, currentDatos?: any): any => {
           bgImages: {
             ...(parsed.bgImages || {}),
             ...(currentDatos?.bgImages || {})
-          },
-          ...(currentDatos?.fotos && currentDatos.fotos.length > 0 ? { fotos: currentDatos.fotos } : {})
+          }
         };
       }
     }
@@ -330,8 +335,7 @@ const getDatosVisualizacionCatalog = (t: any, currentDatos?: any): any => {
 
   return {
     ...baseData,
-    bgImages: bgImagesWithUserBackground,
-    ...(currentDatos?.fotos && currentDatos.fotos.length > 0 ? { fotos: currentDatos.fotos } : {})
+    bgImages: bgImagesWithUserBackground
   };
 };
 
@@ -506,8 +510,65 @@ export default function App() {
 
   const { initialDatos, initialTemaId, isView: isViewMode, isCatalog: isCatalogInitial, initialCatalogTemaId } = getInitialState();
 
+  // Detectar ruta actual: /catalogo o /generador
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isCatalogRoute = currentPath.includes('/catalogo') || currentPath.includes('/catalogo/');
+  const isGeneratorRoute = currentPath.includes('/generador') || currentPath.includes('/generador/') || !isCatalogRoute;
+
   // Estado principal de los datos de la invitación
   const [datos, setDatos] = useState<InvitacionDatos>(initialDatos);
+
+  // Sincronizar modo con ruta: /catalogo muestra solo catálogo, /generador muestra solo generador
+  useEffect(() => {
+    if (isCatalogRoute) {
+      setIsCatalogMode(true);
+    } else if (isGeneratorRoute && !isCatalogRoute) {
+      setIsCatalogMode(false);
+    }
+  }, [isCatalogRoute, isGeneratorRoute]);
+
+  // Cargar fondos personalizados desde Supabase al iniciar
+  useEffect(() => {
+    const cargarFondosDesdeSupabase = async () => {
+      try {
+        if (!window.supabaseClient) return;
+
+        const supabase = window.supabaseClient;
+        const { data, error } = await supabase
+          .from('invitaciones')
+          .select('fondos_personalizados')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.warn('Error al cargar fondos desde Supabase:', error.message);
+          return;
+        }
+
+        if (data && data.length > 0 && data[0].fondos_personalizados) {
+          const fondosGuardados = data[0].fondos_personalizados;
+          setDatos(prev => ({
+            ...prev,
+            bgImages: {
+              ...prev.bgImages,
+              ...fondosGuardados
+            }
+          }));
+
+          // También guardar en localStorage local
+          try {
+            localStorage.setItem('xv_fondos_personalizados', JSON.stringify(fondosGuardados));
+          } catch (err) {
+            console.warn('Error al guardar fondos en localStorage:', err);
+          }
+        }
+      } catch (err) {
+        console.warn('Error al cargar fondos desde Supabase:', err);
+      }
+    };
+
+    cargarFondosDesdeSupabase();
+  }, []);
 
   // Auto-guardar cambios de datos en localStorage para persistencia local
   useEffect(() => {
@@ -605,6 +666,24 @@ export default function App() {
         const customBgs = savedBgs ? JSON.parse(savedBgs) : {};
         customBgs[selectedTemaId] = url;
         localStorage.setItem('xv_fondos_personalizados', JSON.stringify(customBgs));
+
+        // Guardar también en Supabase para sincronizar entre dispositivos
+        try {
+          if (window.supabaseClient) {
+            const supabase = window.supabaseClient;
+            await supabase
+              .from('invitaciones')
+              .insert([{
+                nombre_quinceanera: datos.nombre || 'Sin nombre',
+                tema_elegido: selectedTemaId,
+                fondos_personalizados: customBgs,
+                estado: 'fondos_personalizados'
+              }]);
+            console.log('✅ Fondo guardado en Supabase');
+          }
+        } catch (err) {
+          console.warn("Advertencia: Error al guardar fondo en Supabase:", err);
+        }
       } catch (err) {
         console.error("Error al guardar fondo personalizado en localStorage:", err);
       }
